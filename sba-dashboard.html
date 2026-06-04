@@ -3,972 +3,1279 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SBA — Дашборд проектного менеджера</title>
+<title>SBA Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --blue-dark: #1a3a5c;
-    --blue-mid: #2563a8;
-    --blue-light: #3b82d4;
-    --blue-pale: #dbeafe;
-    --gray-dark: #374151;
-    --gray-mid: #6b7280;
-    --gray-light: #f3f4f6;
-    --gray-border: #e5e7eb;
-    --red: #dc2626;
-    --red-pale: #fee2e2;
-    --yellow: #d97706;
-    --yellow-pale: #fef3c7;
-    --green: #16a34a;
-    --green-pale: #dcfce7;
-    --orange: #ea580c;
-    --orange-pale: #ffedd5;
-    --white: #ffffff;
-    --shadow: 0 1px 4px rgba(0,0,0,0.10);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fa; color: var(--gray-dark); font-size: 14px; }
+:root {
+  --blue-dark: #1a3a5c; --blue-mid: #2563a8; --blue-light: #3b82d4; --blue-pale: #dbeafe;
+  --gray-dark: #374151; --gray-mid: #6b7280; --gray-light: #f3f4f6; --gray-border: #e5e7eb;
+  --red: #dc2626; --yellow: #d97706; --green: #16a34a; --orange: #ea580c;
+  --red-pale: #fee2e2; --yellow-pale: #fef3c7; --green-pale: #dcfce7; --orange-pale: #ffedd5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fa; color: var(--gray-dark); font-size: 14px; }
 
-  /* HEADER */
-  .header { background: var(--blue-dark); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-md); }
-  .header-left { display: flex; align-items: center; gap: 14px; }
-  .logo { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
-  .logo span { color: #93c5fd; }
-  .header-sub { font-size: 12px; color: #94a3b8; }
-  .header-right { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btn { padding: 8px 16px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; white-space: nowrap; }
-  .btn-primary { background: var(--blue-light); color: white; }
-  .btn-primary:hover { background: var(--blue-mid); }
-  .btn-success { background: #16a34a; color: white; }
-  .btn-success:hover { background: #15803d; }
-  .btn-danger { background: #dc2626; color: white; }
-  .btn-danger:hover { background: #b91c1c; }
-  .btn-gray { background: #64748b; color: white; }
-  .btn-gray:hover { background: #475569; }
-  .btn-outline { background: transparent; color: white; border: 1px solid #93c5fd; }
-  .btn-outline:hover { background: rgba(147,197,253,0.15); }
-  .btn-sm { padding: 5px 10px; font-size: 12px; }
-  .btn-icon { padding: 6px 10px; }
+/* HEADER */
+.header { background: var(--blue-dark); color: white; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.logo { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+.logo span { color: #93c5fd; }
+.header-sub { font-size: 11px; color: #94a3b8; margin-left: 12px; }
 
-  /* MAIN LAYOUT */
-  .main { max-width: 1600px; margin: 0 auto; padding: 20px 16px; }
+/* NAV TABS */
+.nav-tabs { background: var(--blue-mid); display: flex; gap: 2px; padding: 0 16px; position: sticky; top: 48px; z-index: 199; overflow-x: auto; }
+.nav-tab { padding: 10px 18px; color: #bfdbfe; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all .15s; }
+.nav-tab:hover { color: white; background: rgba(255,255,255,0.08); }
+.nav-tab.active { color: white; border-bottom-color: #93c5fd; }
 
-  /* KPI CARDS */
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
-  .kpi-card { background: white; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-left: 4px solid var(--blue-mid); }
-  .kpi-card.red { border-left-color: var(--red); }
-  .kpi-card.green { border-left-color: var(--green); }
-  .kpi-card.yellow { border-left-color: var(--yellow); }
-  .kpi-card.orange { border-left-color: var(--orange); }
-  .kpi-label { font-size: 11px; color: var(--gray-mid); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-  .kpi-value { font-size: 26px; font-weight: 700; color: var(--blue-dark); line-height: 1; }
-  .kpi-value.red { color: var(--red); }
-  .kpi-value.yellow { color: var(--yellow); }
-  .kpi-value.green { color: var(--green); }
-  .kpi-sub { font-size: 11px; color: var(--gray-mid); margin-top: 4px; }
+/* SECTIONS */
+.section { display: none; padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
+.section.active { display: block; }
 
-  /* CHARTS ROW */
-  .charts-row { display: grid; grid-template-columns: 340px 1fr; gap: 16px; margin-bottom: 20px; }
-  .chart-card { background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
-  .chart-title { font-size: 14px; font-weight: 700; color: var(--blue-dark); margin-bottom: 14px; }
-  .chart-wrap { position: relative; height: 220px; }
+/* BUTTONS */
+.btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; white-space: nowrap; }
+.btn-primary { background: var(--blue-light); color: white; }
+.btn-primary:hover { background: var(--blue-mid); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #15803d; }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-gray { background: #64748b; color: white; }
+.btn-gray:hover { background: #475569; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
 
-  /* ALERT BLOCKS */
-  .alert-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
-  .alert-block { background: white; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
-  .alert-block-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-  .alert-block-title .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .alert-block.urgent .alert-block-title { color: var(--red); }
-  .alert-block.urgent .dot { background: var(--red); }
-  .alert-block.waiting .alert-block-title { color: #7c3aed; }
-  .alert-block.waiting .dot { background: #7c3aed; }
-  .alert-block.kp .alert-block-title { color: var(--yellow); }
-  .alert-block.kp .dot { background: var(--yellow); }
-  .alert-block.program .alert-block-title { color: var(--orange); }
-  .alert-block.program .dot { background: var(--orange); }
-  .alert-block.contract .alert-block-title { color: var(--blue-mid); }
-  .alert-block.contract .dot { background: var(--blue-mid); }
-  .alert-block.lms .alert-block-title { color: #0891b2; }
-  .alert-block.lms .dot { background: #0891b2; }
-  .alert-block.done .alert-block-title { color: var(--green); }
-  .alert-block.done .dot { background: var(--green); }
-  .alert-item { font-size: 12px; padding: 5px 8px; border-radius: 4px; margin-bottom: 4px; cursor: pointer; transition: background .1s; }
-  .alert-item:hover { background: var(--gray-light); }
-  .alert-item strong { display: block; font-weight: 600; }
-  .alert-item span { color: var(--gray-mid); }
-  .alert-empty { font-size: 12px; color: var(--gray-mid); font-style: italic; }
+/* KPI CARDS */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: white; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid var(--blue-light); }
+.kpi-card.red { border-left-color: var(--red); }
+.kpi-card.yellow { border-left-color: var(--yellow); }
+.kpi-card.green { border-left-color: var(--green); }
+.kpi-card.orange { border-left-color: var(--orange); }
+.kpi-label { font-size: 11px; color: var(--gray-mid); margin-bottom: 4px; }
+.kpi-value { font-size: 22px; font-weight: 700; color: var(--blue-dark); line-height: 1.1; }
+.kpi-value.red { color: var(--red); }
+.kpi-value.yellow { color: var(--yellow); }
+.kpi-value.green { color: var(--green); }
+.kpi-sub { font-size: 11px; color: var(--gray-mid); margin-top: 3px; }
 
-  /* FILTERS */
-  .filters-card { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 16px; }
-  .filters-title { font-size: 13px; font-weight: 700; color: var(--blue-dark); margin-bottom: 12px; }
-  .filters-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
-  .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 130px; flex: 1; }
-  .filter-group label { font-size: 11px; color: var(--gray-mid); font-weight: 600; text-transform: uppercase; }
-  .filter-group input, .filter-group select { padding: 7px 10px; border: 1px solid var(--gray-border); border-radius: var(--radius-sm); font-size: 13px; color: var(--gray-dark); outline: none; background: white; }
-  .filter-group input:focus, .filter-group select:focus { border-color: var(--blue-light); box-shadow: 0 0 0 2px rgba(59,130,212,0.15); }
-  .filter-search { flex: 2; min-width: 200px; }
+/* BLOCK */
+.block { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 20px; }
+.block-title { font-size: 15px; font-weight: 700; color: var(--blue-dark); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 
-  /* TABLE */
-  .table-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
-  .table-header { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-border); flex-wrap: wrap; gap: 8px; }
-  .table-header-title { font-size: 15px; font-weight: 700; color: var(--blue-dark); }
-  .table-count { font-size: 12px; color: var(--gray-mid); }
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 900px; }
-  th { background: var(--gray-light); color: var(--blue-dark); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--gray-border); white-space: nowrap; cursor: pointer; user-select: none; }
-  th:hover { background: var(--blue-pale); }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--gray-border); font-size: 13px; vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #f8faff; }
-  tr.row-overdue td { background: var(--red-pale) !important; }
-  tr.row-soon td { background: var(--yellow-pale) !important; }
-  tr.row-done td { background: var(--green-pale) !important; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-  .badge-red { background: var(--red-pale); color: var(--red); }
-  .badge-yellow { background: var(--yellow-pale); color: var(--yellow); }
-  .badge-green { background: var(--green-pale); color: var(--green); }
-  .badge-blue { background: var(--blue-pale); color: var(--blue-mid); }
-  .badge-gray { background: var(--gray-light); color: var(--gray-mid); }
-  .badge-purple { background: #ede9fe; color: #7c3aed; }
-  .badge-orange { background: var(--orange-pale); color: var(--orange); }
-  .badge-cyan { background: #cffafe; color: #0e7490; }
-  .table-actions { display: flex; gap: 4px; }
-  .icon-btn { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px; transition: background .1s; }
-  .icon-btn:hover { background: var(--gray-light); }
-  .check-icon { font-size: 13px; }
-  .check-yes { color: var(--green); }
-  .check-no { color: #d1d5db; }
-  .deadline-overdue { color: var(--red); font-weight: 700; }
-  .deadline-soon { color: var(--yellow); font-weight: 700; }
-  .deadline-ok { color: var(--gray-dark); }
+/* TABLE */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--gray-light); color: var(--gray-dark); font-weight: 600; padding: 9px 10px; text-align: left; border-bottom: 2px solid var(--gray-border); white-space: nowrap; cursor: pointer; user-select: none; }
+th:hover { background: #e9ecf0; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--gray-border); vertical-align: middle; }
+tr:hover td { background: #f8fafc; }
+tr.row-overdue td { background: var(--red-pale); }
+tr.row-soon td { background: var(--yellow-pale); }
+tr.row-done td { background: var(--green-pale); opacity: .8; }
+.no-data { text-align: center; color: var(--gray-mid); padding: 32px !important; font-style: italic; }
 
-  /* MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px; }
-  .modal-overlay.hidden { display: none; }
-  .modal { background: white; border-radius: var(--radius); width: 100%; max-width: 860px; box-shadow: var(--shadow-md); }
-  .modal-header { background: var(--blue-dark); color: white; padding: 16px 20px; border-radius: var(--radius) var(--radius) 0 0; display: flex; align-items: center; justify-content: space-between; }
-  .modal-header h3 { font-size: 16px; font-weight: 700; }
-  .modal-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
-  .modal-close:hover { color: #93c5fd; }
-  .modal-body { padding: 20px; max-height: 80vh; overflow-y: auto; }
-  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--gray-border); display: flex; gap: 8px; justify-content: flex-end; }
-  .form-section { margin-bottom: 20px; }
-  .form-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--blue-mid); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--blue-pale); }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .form-group { display: flex; flex-direction: column; gap: 4px; }
-  .form-group.full { grid-column: 1 / -1; }
-  .form-group label { font-size: 11px; font-weight: 600; color: var(--gray-mid); text-transform: uppercase; }
-  .form-group input, .form-group select, .form-group textarea { padding: 8px 10px; border: 1px solid var(--gray-border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; outline: none; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue-light); box-shadow: 0 0 0 2px rgba(59,130,212,0.15); }
-  .form-group textarea { resize: vertical; min-height: 60px; }
-  .form-checkboxes { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; }
-  .form-cb { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
-  .form-cb input { width: 15px; height: 15px; cursor: pointer; }
+/* BADGES */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-blue { background: var(--blue-pale); color: var(--blue-mid); }
+.badge-green { background: var(--green-pale); color: var(--green); }
+.badge-red { background: var(--red-pale); color: var(--red); }
+.badge-yellow { background: var(--yellow-pale); color: var(--yellow); }
+.badge-orange { background: var(--orange-pale); color: var(--orange); }
+.badge-gray { background: var(--gray-light); color: var(--gray-mid); }
 
-  /* CONFIRM MODAL */
-  .confirm-modal { background: white; border-radius: var(--radius); width: 380px; box-shadow: var(--shadow-md); padding: 24px; text-align: center; }
-  .confirm-modal p { margin: 10px 0 20px; color: var(--gray-dark); }
+/* FILTER BAR */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+.filter-bar input, .filter-bar select { padding: 7px 10px; border: 1px solid var(--gray-border); border-radius: 6px; font-size: 13px; background: white; min-width: 120px; }
+.filter-bar input[type=text] { min-width: 180px; }
 
-  /* TOAST */
-  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
-  .toast { background: var(--blue-dark); color: white; padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; box-shadow: var(--shadow-md); animation: slideIn .2s ease; max-width: 280px; }
-  .toast.success { background: var(--green); }
-  .toast.error { background: var(--red); }
-  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
+.modal-overlay.hidden { display: none; }
+.modal { background: white; border-radius: 12px; width: 100%; max-width: 760px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); margin: auto; }
+.modal-header { background: var(--blue-dark); color: white; padding: 16px 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; line-height: 1; }
+.modal-body { padding: 20px; max-height: 75vh; overflow-y: auto; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--gray-border); display: flex; gap: 10px; justify-content: flex-end; }
 
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    .charts-row { grid-template-columns: 1fr; }
-    .chart-wrap { height: 200px; }
-  }
-  @media (max-width: 600px) {
-    .header { padding: 10px 14px; }
-    .logo { font-size: 18px; }
-    .main { padding: 12px 8px; }
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .kpi-value { font-size: 22px; }
-    .filters-row { flex-direction: column; }
-    .filter-group { min-width: 100%; }
-    table { min-width: 700px; }
-    .form-grid { grid-template-columns: 1fr; }
-  }
+/* FORM */
+.form-section { margin-bottom: 20px; }
+.form-section-title { font-size: 13px; font-weight: 700; color: var(--blue-mid); border-bottom: 1px solid var(--blue-pale); padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .5px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group.full { grid-column: 1/-1; }
+.form-group label { font-size: 12px; color: var(--gray-mid); font-weight: 600; }
+.form-group input, .form-group select, .form-group textarea { padding: 7px 10px; border: 1px solid var(--gray-border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.form-group textarea { min-height: 70px; resize: vertical; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--blue-light); box-shadow: 0 0 0 2px var(--blue-pale); }
+.link-row { display: flex; gap: 6px; align-items: center; }
+.link-row input { flex: 1; }
 
-  .sort-arrow { font-size: 10px; margin-left: 2px; }
-  .no-data { text-align: center; color: var(--gray-mid); padding: 32px; font-style: italic; }
-  .pagination { display: flex; align-items: center; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--gray-border); justify-content: flex-end; flex-wrap: wrap; }
-  .page-btn { padding: 5px 10px; border: 1px solid var(--gray-border); background: white; border-radius: 4px; cursor: pointer; font-size: 13px; }
-  .page-btn.active { background: var(--blue-mid); color: white; border-color: var(--blue-mid); }
-  .page-btn:hover:not(.active) { background: var(--gray-light); }
-  .page-info { font-size: 12px; color: var(--gray-mid); }
+/* CHECKBOXES */
+.cb-row { display: flex; gap: 16px; flex-wrap: wrap; padding: 8px 0; }
+.cb-label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.cb-label input { width: 16px; height: 16px; }
 
-  .margin-calc { background: var(--blue-pale); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--blue-dark); margin-top: 8px; }
-  .margin-calc strong { font-weight: 700; }
+/* FUNNEL */
+.funnel-wrap { display: flex; flex-direction: column; gap: 4px; max-width: 600px; margin: 0 auto; }
+.funnel-stage { display: flex; align-items: center; gap: 10px; }
+.funnel-bar-wrap { flex: 1; }
+.funnel-bar { height: 32px; border-radius: 4px; display: flex; align-items: center; padding: 0 12px; color: white; font-weight: 600; font-size: 12px; transition: width .3s; }
+.funnel-info { font-size: 12px; color: var(--gray-mid); min-width: 80px; text-align: right; }
+
+/* ALERT GRID */
+.alert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.alert-card { background: white; border-radius: 10px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.alert-card-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.alert-item { padding: 6px 0; border-bottom: 1px solid var(--gray-border); cursor: pointer; transition: background .1s; }
+.alert-item:last-child { border-bottom: none; }
+.alert-item:hover { background: var(--blue-pale); border-radius: 4px; padding-left: 4px; }
+.alert-item-name { font-size: 13px; font-weight: 600; }
+.alert-item-client { font-size: 11px; color: var(--gray-mid); }
+
+/* TODAY BLOCK */
+.today-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--gray-border); background: var(--gray-light); }
+.today-item.overdue { border-left-color: var(--red); background: var(--red-pale); }
+.today-item.today { border-left-color: var(--yellow); background: var(--yellow-pale); }
+.today-item.soon { border-left-color: var(--blue-light); background: var(--blue-pale); }
+.today-item-action { font-weight: 600; font-size: 13px; }
+.today-item-meta { font-size: 12px; color: var(--gray-mid); margin-top: 2px; }
+
+/* CALENDAR */
+.cal-nav { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.cal-title { font-size: 17px; font-weight: 700; color: var(--blue-dark); min-width: 180px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--gray-mid); padding: 6px; }
+.cal-day { min-height: 80px; border: 1px solid var(--gray-border); border-radius: 6px; padding: 6px; cursor: pointer; transition: background .1s; background: white; }
+.cal-day:hover { background: var(--blue-pale); }
+.cal-day.today { background: var(--blue-pale); border-color: var(--blue-light); }
+.cal-day.other-month { background: var(--gray-light); opacity: .6; }
+.cal-day-num { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.cal-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 1px; }
+.cal-popup { background: white; border-radius: 10px; padding: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); margin-top: 12px; display: none; }
+.cal-popup.open { display: block; }
+
+/* CHARTS */
+.charts-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.chart-box { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.chart-title { font-size: 13px; font-weight: 700; color: var(--blue-dark); margin-bottom: 12px; }
+
+/* TRAINERS */
+.stars { color: var(--yellow); letter-spacing: 1px; }
+
+/* LMS */
+.lms-cb { width: 18px; height: 18px; cursor: pointer; }
+
+/* TOAST */
+#toastContainer { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--blue-dark); color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideIn .2s ease; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* TEMPLATE CARDS */
+.tmpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.tmpl-card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.tmpl-card-title { font-size: 14px; font-weight: 700; color: var(--blue-dark); margin-bottom: 10px; }
+.tmpl-text { background: var(--gray-light); border-radius: 6px; padding: 10px; font-size: 12px; line-height: 1.6; color: var(--gray-dark); white-space: pre-wrap; max-height: 160px; overflow-y: auto; margin-bottom: 10px; }
+
+/* CLIENT MODAL */
+.client-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.client-stat { background: var(--gray-light); border-radius: 8px; padding: 10px; text-align: center; }
+.client-stat-val { font-size: 18px; font-weight: 700; color: var(--blue-dark); }
+.client-stat-lbl { font-size: 11px; color: var(--gray-mid); }
+
+/* HISTORY */
+.history-list { display: flex; flex-direction: column; gap: 8px; }
+.history-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; background: var(--gray-light); border-radius: 6px; }
+.history-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue-light); margin-top: 4px; flex-shrink: 0; }
+.history-date { font-size: 11px; color: var(--gray-mid); white-space: nowrap; }
+.history-action { font-size: 13px; font-weight: 600; }
+.history-comment { font-size: 12px; color: var(--gray-mid); }
+
+/* PAGINATION */
+.pagination { display: flex; align-items: center; gap: 4px; margin-top: 12px; flex-wrap: wrap; }
+.page-btn { padding: 5px 10px; border: 1px solid var(--gray-border); border-radius: 4px; cursor: pointer; font-size: 12px; background: white; }
+.page-btn.active { background: var(--blue-mid); color: white; border-color: var(--blue-mid); }
+.page-info { font-size: 12px; color: var(--gray-mid); margin-right: 8px; }
+
+/* ICON BTN */
+.icon-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 3px; border-radius: 4px; }
+.icon-btn:hover { background: var(--gray-light); }
+
+/* CHECK ICONS */
+.check-yes { opacity: 1; }
+.check-no { opacity: .25; filter: grayscale(1); }
+
+/* DEADLINE COLORS */
+.deadline-overdue { color: var(--red); font-weight: 700; }
+.deadline-soon { color: var(--yellow); font-weight: 700; }
+.deadline-ok { color: var(--green); }
+
+/* CONFIRM */
+.confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+.confirm-overlay.hidden { display: none; }
+.confirm-box { background: white; border-radius: 10px; padding: 24px; max-width: 380px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
+.confirm-text { font-size: 15px; margin-bottom: 20px; }
+.confirm-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* MARGIN CALC */
+.margin-calc { background: var(--blue-pale); border-radius: 6px; padding: 8px 12px; font-size: 12px; margin-top: 6px; }
+
+/* SECTION HEADER */
+.section-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.section-title { font-size: 18px; font-weight: 700; color: var(--blue-dark); }
+.section-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .section { padding: 12px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid.cols3 { grid-template-columns: 1fr 1fr; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .client-stats { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-left">
-    <div>
-      <div class="logo">SBA <span>Dashboard</span></div>
-      <div class="header-sub">Samruk Business Academy — Проектный менеджер</div>
-    </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="logo">SBA <span>Dashboard</span></div>
+    <div class="header-sub">Samruk Business Academy — CRM</div>
   </div>
-  <div class="header-right">
-    <button class="btn btn-primary" onclick="openModal()">+ Новый проект</button>
-    <button class="btn btn-success" onclick="exportExcel()">⬇ Excel</button>
-    <button class="btn btn-outline" onclick="confirmReset()">🗑 Сбросить</button>
-  </div>
+  <div style="font-size:12px;color:#94a3b8" id="headerDate"></div>
 </div>
 
-<div class="main">
-  <!-- KPI -->
-  <div class="kpi-grid" id="kpiGrid"></div>
+<div class="nav-tabs" id="navTabs">
+  <div class="nav-tab active" onclick="showTab('dashboard')">Дашборд</div>
+  <div class="nav-tab" onclick="showTab('projects')">Проекты</div>
+  <div class="nav-tab" onclick="showTab('trainers')">Тренеры</div>
+  <div class="nav-tab" onclick="showTab('lms')">LMS</div>
+  <div class="nav-tab" onclick="showTab('calendar')">Календарь</div>
+  <div class="nav-tab" onclick="showTab('analytics')">Аналитика</div>
+  <div class="nav-tab" onclick="showTab('templates')">Шаблоны</div>
+</div>
 
-  <!-- Charts -->
-  <div class="charts-row">
-    <div class="chart-card">
-      <div class="chart-title">Проекты по статусам</div>
-      <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Суммы КП по проектам (KZT)</div>
-      <div class="chart-wrap"><canvas id="chartKP"></canvas></div>
-    </div>
+<!-- DASHBOARD -->
+<div class="section active" id="sec-dashboard">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="block">
+    <div class="block-title">📅 Сегодня нужно сделать</div>
+    <div id="todayTasks"></div>
   </div>
-
-  <!-- Alert Blocks -->
-  <div class="alert-grid" id="alertGrid"></div>
-
-  <!-- Filters -->
-  <div class="filters-card">
-    <div class="filters-title">Фильтры и поиск</div>
-    <div class="filters-row">
-      <div class="filter-group filter-search">
-        <label>Поиск</label>
-        <input type="text" id="fSearch" placeholder="Название, заказчик, тренер..." oninput="applyFilters()">
-      </div>
-      <div class="filter-group">
-        <label>Статус</label>
-        <select id="fStatus" onchange="applyFilters()">
-          <option value="">Все</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Заказчик</label>
-        <select id="fClient" onchange="applyFilters()">
-          <option value="">Все</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Тренер</label>
-        <select id="fTrainer" onchange="applyFilters()">
-          <option value="">Все</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Город</label>
-        <select id="fCity" onchange="applyFilters()">
-          <option value="">Все</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Ответственный</label>
-        <select id="fManager" onchange="applyFilters()">
-          <option value="">Все</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Дедлайн до</label>
-        <input type="date" id="fDeadline" onchange="applyFilters()">
-      </div>
-      <div style="align-self:flex-end">
-        <button class="btn btn-gray btn-sm" onclick="clearFilters()">Сбросить фильтры</button>
-      </div>
-    </div>
+  <div class="block">
+    <div class="block-title">🔽 Воронка продаж</div>
+    <div class="funnel-wrap" id="funnelBlock"></div>
   </div>
-
-  <!-- Table -->
-  <div class="table-card">
-    <div class="table-header">
-      <div>
-        <div class="table-header-title">Реестр проектов</div>
-        <div class="table-count" id="tableCount"></div>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table id="projectsTable">
-        <thead>
-          <tr>
-            <th onclick="sortTable('name')">Проект <span class="sort-arrow" id="sort-name"></span></th>
-            <th onclick="sortTable('client')">Заказчик <span class="sort-arrow" id="sort-client"></span></th>
-            <th onclick="sortTable('topic')">Тема <span class="sort-arrow" id="sort-topic"></span></th>
-            <th onclick="sortTable('trainer')">Тренер <span class="sort-arrow" id="sort-trainer"></span></th>
-            <th onclick="sortTable('status')">Статус <span class="sort-arrow" id="sort-status"></span></th>
-            <th onclick="sortTable('deadline')">Дедлайн <span class="sort-arrow" id="sort-deadline"></span></th>
-            <th onclick="sortTable('kpAmount')">Сумма КП <span class="sort-arrow" id="sort-kpAmount"></span></th>
-            <th>Документы</th>
-            <th onclick="sortTable('nextActionDate')">След. действие <span class="sort-arrow" id="sort-nextActionDate"></span></th>
-            <th>Менеджер</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
+  <div class="block">
+    <div class="block-title">⚡ Контроль по зонам</div>
+    <div class="alert-grid" id="alertGrid"></div>
+  </div>
+  <div class="block">
+    <div class="block-title">📄 Контроль КП</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Проект</th><th>Заказчик</th><th>Дата запроса</th><th>Дней прошло</th><th>КП отправлен</th><th>Статус</th></tr></thead>
+        <tbody id="kpControlBody"></tbody>
       </table>
     </div>
-    <div class="pagination" id="pagination"></div>
   </div>
 </div>
 
-<!-- Add/Edit Modal -->
+<!-- PROJECTS -->
+<div class="section" id="sec-projects">
+  <div class="section-header">
+    <div class="section-title">Проекты</div>
+    <div class="section-actions">
+      <button class="btn btn-primary" onclick="openModal(null)">+ Новый проект</button>
+      <button class="btn btn-gray" onclick="exportExcel()">⬇ Excel</button>
+      <button class="btn btn-danger" onclick="confirmReset()">🗑 Сбросить данные</button>
+    </div>
+  </div>
+  <div class="filter-bar" id="filterBar">
+    <input type="text" id="fSearch" placeholder="Поиск..." oninput="applyFilters()">
+    <select id="fStatus" onchange="applyFilters()"><option value="">Все статусы</option></select>
+    <select id="fFunnel" onchange="applyFilters()"><option value="">Все этапы воронки</option></select>
+    <select id="fClient" onchange="applyFilters()"><option value="">Все заказчики</option></select>
+    <select id="fTrainer" onchange="applyFilters()"><option value="">Все тренеры</option></select>
+    <select id="fCity" onchange="applyFilters()"><option value="">Все города</option></select>
+    <select id="fManager" onchange="applyFilters()"><option value="">Все менеджеры</option></select>
+    <input type="date" id="fDeadline" onchange="applyFilters()" title="Дедлайн до">
+    <button class="btn btn-gray btn-sm" onclick="resetFilters()">Сбросить</button>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <span id="tableCount" style="font-size:13px;color:var(--gray-mid)"></span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('name')">Проект ↕</th>
+          <th onclick="sortBy('client')">Заказчик ↕</th>
+          <th onclick="sortBy('funnelStage')">Этап воронки ↕</th>
+          <th onclick="sortBy('trainer')">Тренер ↕</th>
+          <th onclick="sortBy('status')">Статус ↕</th>
+          <th onclick="sortBy('probability')">Вер-ть ↕</th>
+          <th onclick="sortBy('deadline')">Дедлайн ↕</th>
+          <th onclick="sortBy('kpAmount')">Сумма КП ↕</th>
+          <th>Документы</th>
+          <th onclick="sortBy('nextActionDate')">След.действие ↕</th>
+          <th onclick="sortBy('manager')">Менеджер ↕</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- TRAINERS -->
+<div class="section" id="sec-trainers">
+  <div class="section-header">
+    <div class="section-title">Тренеры</div>
+    <div class="section-actions">
+      <button class="btn btn-primary" onclick="openTrainerModal(null)">+ Добавить тренера</button>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ФИО</th><th>Темы обучения</th><th>Стоимость/день</th><th>Город</th><th>Формат</th>
+          <th>Телефон</th><th>Email</th><th>Рейтинг</th><th>Последний проект</th><th>Действия</th>
+        </tr>
+      </thead>
+      <tbody id="trainersBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LMS -->
+<div class="section" id="sec-lms">
+  <div class="section-header">
+    <div class="section-title">LMS — Управление доступами</div>
+    <div class="section-actions">
+      <button class="btn btn-primary" onclick="openLmsModal(null)">+ Добавить запись LMS</button>
+    </div>
+  </div>
+  <div class="kpi-row" id="lmsKpi"></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Компания</th><th>Проект</th><th>Участников</th><th>Списки получены</th>
+          <th>Доступ открыт</th><th>Дата открытия</th><th>Прошли</th><th>Не прошли</th>
+          <th>Серт. выданы</th><th>Действия</th>
+        </tr>
+      </thead>
+      <tbody id="lmsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="section" id="sec-calendar">
+  <div class="block">
+    <div class="block-title">
+      <span>Календарь событий</span>
+      <div style="display:flex;gap:10px;font-size:12px">
+        <span><span class="cal-dot" style="background:#dc2626"></span> Дедлайн</span>
+        <span><span class="cal-dot" style="background:#2563a8"></span> Действие</span>
+        <span><span class="cal-dot" style="background:#16a34a"></span> Обучение</span>
+        <span><span class="cal-dot" style="background:#d97706"></span> Договор</span>
+      </div>
+    </div>
+    <div class="cal-nav">
+      <button class="btn btn-gray btn-sm" onclick="calPrev()">◀ Пред.</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button class="btn btn-gray btn-sm" onclick="calNext()">След. ▶</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-popup" id="calPopup"></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="section" id="sec-analytics">
+  <div class="section-title" style="margin-bottom:16px">Аналитика</div>
+  <div class="kpi-row" id="analyticsKpi"></div>
+  <div class="charts-row">
+    <div class="chart-box"><div class="chart-title">Проекты по статусам</div><canvas id="chartStatus" height="220"></canvas></div>
+    <div class="chart-box"><div class="chart-title">Суммы КП по проектам (топ 8)</div><canvas id="chartKP" height="220"></canvas></div>
+    <div class="chart-box"><div class="chart-title">Новые проекты по месяцам</div><canvas id="chartMonthly" height="220"></canvas></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap">
+    <div class="block" style="margin-bottom:0">
+      <div class="block-title">Конверсия по воронке</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Этап</th><th>Кол-во</th><th>% от пред.</th><th>% от всего</th></tr></thead>
+          <tbody id="funnelConvBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="block" style="margin-bottom:0">
+      <div class="block-title">Pipeline по менеджерам</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Менеджер</th><th>Проектов</th><th>Сумма КП</th><th>Прогноз</th></tr></thead>
+          <tbody id="managerPipeBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATES -->
+<div class="section" id="sec-templates">
+  <div class="section-title" style="margin-bottom:16px">Шаблоны сообщений</div>
+  <div class="tmpl-grid" id="tmplGrid"></div>
+</div>
+
+<!-- PROJECT MODAL -->
 <div class="modal-overlay hidden" id="modalOverlay">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="modalTitle">Новый проект</h3>
+      <div class="modal-title" id="modalTitle">Проект</div>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
     <div class="modal-body">
+      <!-- 1. Основная информация -->
       <div class="form-section">
-        <div class="form-section-title">Основная информация</div>
+        <div class="form-section-title">1. Основная информация</div>
         <div class="form-grid">
-          <div class="form-group full">
-            <label>Название проекта *</label>
-            <input type="text" id="f_name" placeholder="Тренинг по управлению проектами...">
+          <div class="form-group"><label>Название проекта *</label><input id="f_name" type="text" placeholder="Название тренинга или проекта"></div>
+          <div class="form-group"><label>Заказчик *</label><input id="f_client" type="text" placeholder="Название компании"></div>
+          <div class="form-group"><label>Контактное лицо</label><input id="f_contact" type="text"></div>
+          <div class="form-group"><label>Телефон</label><input id="f_phone" type="text" placeholder="+7 ..."></div>
+          <div class="form-group"><label>Email</label><input id="f_email" type="email"></div>
+          <div class="form-group"><label>Тема обучения</label><input id="f_topic" type="text"></div>
+          <div class="form-group"><label>Формат</label>
+            <select id="f_format"><option value="">—</option><option>Очно</option><option>Онлайн</option><option>Очно/Онлайн</option><option>Гибридный</option></select>
           </div>
-          <div class="form-group">
-            <label>Заказчик *</label>
-            <input type="text" id="f_client" placeholder="АО Казмунайгаз">
+          <div class="form-group"><label>Город</label><input id="f_city" type="text"></div>
+          <div class="form-group"><label>Кол-во участников</label><input id="f_participants" type="number" min="1"></div>
+          <div class="form-group"><label>Язык</label>
+            <select id="f_language"><option value="">—</option><option>Казахский</option><option>Русский</option><option>Казахский/Русский</option><option>Английский</option></select>
           </div>
-          <div class="form-group">
-            <label>Контактное лицо</label>
-            <input type="text" id="f_contact" placeholder="Асем Нурланова">
-          </div>
-          <div class="form-group">
-            <label>Телефон / WhatsApp</label>
-            <input type="text" id="f_phone" placeholder="+7 777 123 45 67">
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="f_email" placeholder="contact@company.kz">
-          </div>
-          <div class="form-group">
-            <label>Тема обучения</label>
-            <input type="text" id="f_topic" placeholder="Лидерство, PMBoK...">
-          </div>
-          <div class="form-group">
-            <label>Формат обучения</label>
-            <select id="f_format">
-              <option value="">Не выбрано</option>
-              <option>Очный тренинг</option>
-              <option>Онлайн-вебинар</option>
-              <option>Гибридный</option>
-              <option>Коучинг</option>
-              <option>Оценка персонала</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Город</label>
-            <input type="text" id="f_city" placeholder="Алматы">
-          </div>
-          <div class="form-group">
-            <label>Кол-во участников</label>
-            <input type="number" id="f_participants" placeholder="20">
-          </div>
-          <div class="form-group">
-            <label>Язык обучения</label>
-            <select id="f_language">
-              <option value="">Не выбрано</option>
-              <option>Казахский</option>
-              <option>Русский</option>
-              <option>Смешанный (KZ/RU)</option>
-              <option>Английский</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Тренер / Провайдер</label>
-            <input type="text" id="f_trainer" placeholder="Айгерим Сатпаева">
-          </div>
-          <div class="form-group">
-            <label>Источник запроса</label>
-            <select id="f_source">
-              <option value="">Не выбрано</option>
-              <option>Входящий звонок</option>
-              <option>Email</option>
-              <option>WhatsApp</option>
-              <option>Bitrix</option>
-              <option>Рекомендация</option>
-              <option>Повторный клиент</option>
-              <option>Сайт</option>
-            </select>
+          <div class="form-group"><label>Тренер</label><input id="f_trainer" type="text" list="trainerList"><datalist id="trainerList"></datalist></div>
+          <div class="form-group"><label>Источник</label>
+            <select id="f_source"><option value="">—</option><option>Входящий запрос</option><option>Исходящий звонок</option><option>Рекомендация</option><option>Сайт</option><option>Тендер</option><option>Социальные сети</option></select>
           </div>
         </div>
       </div>
-
+      <!-- 2. Воронка и статус -->
       <div class="form-section">
-        <div class="form-section-title">Статус и этапы</div>
+        <div class="form-section-title">2. Воронка и статус</div>
         <div class="form-grid">
-          <div class="form-group">
-            <label>Статус проекта *</label>
+          <div class="form-group"><label>Этап воронки</label>
+            <select id="f_funnelStage">
+              <option value="">—</option>
+              <option>Новый лид</option><option>Переговоры</option><option>Ждём программу</option>
+              <option>Ждём КП тренера</option><option>КП отправлено</option><option>На согласовании</option>
+              <option>Договор</option><option>Обучение проведено</option><option>Завершено</option><option>Проиграно</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Статус</label>
             <select id="f_status">
-              <option value="Новая заявка">Новая заявка</option>
-              <option value="КП подготовлен">КП подготовлен</option>
-              <option value="КП отправлен">КП отправлен</option>
-              <option value="Жду ответ">Жду ответ</option>
-              <option value="Согласование">Согласование</option>
-              <option value="Договор оформляется">Договор оформляется</option>
-              <option value="Оплачен">Оплачен</option>
-              <option value="В работе">В работе</option>
-              <option value="Завершён">Завершён</option>
-              <option value="Отказ">Отказ</option>
-              <option value="Заморожен">Заморожен</option>
+              <option>Новая заявка</option><option>КП подготовлен</option><option>КП отправлен</option>
+              <option>Жду ответ</option><option>Договор оформляется</option><option>В работе</option>
+              <option>Обучение проведено</option><option>Завершён</option><option>Отказ</option><option>Проиграно</option><option>Пауза</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Текущий этап</label>
-            <input type="text" id="f_stage" placeholder="Согласование программы">
+          <div class="form-group"><label>Приоритет</label>
+            <select id="f_priority"><option>Высокий</option><option>Средний</option><option>Низкий</option></select>
           </div>
-          <div class="form-group">
-            <label>Приоритет</label>
-            <select id="f_priority">
-              <option value="Средний">Средний</option>
-              <option value="Высокий">Высокий</option>
-              <option value="Низкий">Низкий</option>
-            </select>
+          <div class="form-group"><label>Вероятность (%)</label>
+            <select id="f_probability"><option value="10">10%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="90">90%</option><option value="100">100%</option></select>
           </div>
-          <div class="form-group">
-            <label>Ответственный менеджер</label>
-            <input type="text" id="f_manager" placeholder="Динара Жаксыбекова">
-          </div>
-          <div class="form-group">
-            <label>Дата запроса</label>
-            <input type="date" id="f_requestDate">
-          </div>
-          <div class="form-group">
-            <label>Дедлайн (дата обучения)</label>
-            <input type="date" id="f_deadline">
-          </div>
-          <div class="form-group">
-            <label>Следующее действие</label>
-            <input type="text" id="f_nextAction" placeholder="Позвонить, напомнить про КП...">
-          </div>
-          <div class="form-group">
-            <label>Дата следующего действия</label>
-            <input type="date" id="f_nextActionDate">
-          </div>
-          <div class="form-group full">
-            <label>Комментарий</label>
-            <textarea id="f_comment" placeholder="Доп. информация по проекту..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Ссылка (Bitrix / Documentolog)</label>
-            <input type="text" id="f_link" placeholder="https://...">
-          </div>
+          <div class="form-group"><label>Менеджер</label><input id="f_manager" type="text"></div>
+          <div class="form-group"><label>Дата запроса</label><input id="f_requestDate" type="date"></div>
+          <div class="form-group"><label>Дедлайн</label><input id="f_deadline" type="date"></div>
+          <div class="form-group"><label>Текущий этап (текст)</label><input id="f_stage" type="text" placeholder="Описание текущего этапа"></div>
+          <div class="form-group"><label>Следующее действие</label><input id="f_nextAction" type="text"></div>
+          <div class="form-group"><label>Дата след. действия</label><input id="f_nextActionDate" type="date"></div>
+          <div class="form-group full"><label>Комментарий</label><textarea id="f_comment"></textarea></div>
         </div>
       </div>
-
+      <!-- 3. Финансы -->
       <div class="form-section">
-        <div class="form-section-title">Финансы</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Дата отправки КП</label>
-            <input type="date" id="f_kpDate">
+        <div class="form-section-title">3. Финансы</div>
+        <div class="form-grid cols3">
+          <div class="form-group"><label>Дата КП</label><input id="f_kpDate" type="date"></div>
+          <div class="form-group"><label>Сумма КП (₸)</label><input id="f_kpAmount" type="number" min="0" oninput="calcMargin()"></div>
+          <div class="form-group"><label>Расходы тренера (₸)</label><input id="f_trainerCost" type="number" min="0" oninput="calcMargin()"></div>
+          <div class="form-group"><label>НДС</label>
+            <select id="f_vat" onchange="calcMargin()"><option value="0">Без НДС</option><option value="12">12%</option></select>
           </div>
-          <div class="form-group">
-            <label>Сумма КП (KZT, без НДС)</label>
-            <input type="number" id="f_kpAmount" placeholder="1500000" oninput="calcMargin()">
-          </div>
-          <div class="form-group">
-            <label>Расходы на тренера (KZT)</label>
-            <input type="number" id="f_trainerCost" placeholder="800000" oninput="calcMargin()">
-          </div>
-          <div class="form-group">
-            <label>НДС включён</label>
-            <select id="f_vat" onchange="calcMargin()">
-              <option value="0">Без НДС</option>
-              <option value="12">12%</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Статус оплаты</label>
-            <select id="f_payStatus">
-              <option value="">Не оплачен</option>
-              <option>Частично оплачен</option>
-              <option>Полностью оплачен</option>
-            </select>
+          <div class="form-group"><label>Сумма договора (₸)</label><input id="f_contractAmount" type="number" min="0"></div>
+          <div class="form-group"><label>Статус оплаты</label>
+            <select id="f_payStatus"><option value="">—</option><option>Не оплачено</option><option>Частично оплачено</option><option>Оплачено</option><option>Возврат</option></select>
           </div>
         </div>
         <div class="margin-calc" id="marginCalc"></div>
       </div>
-
+      <!-- 4. Документы -->
       <div class="form-section">
-        <div class="form-section-title">Наличие документов</div>
-        <div class="form-checkboxes">
-          <label class="form-cb"><input type="checkbox" id="f_hasProg"> Программа</label>
-          <label class="form-cb"><input type="checkbox" id="f_hasKP"> КП</label>
-          <label class="form-cb"><input type="checkbox" id="f_hasContract"> Договор</label>
-          <label class="form-cb"><input type="checkbox" id="f_hasRequest"> Заявка</label>
-          <label class="form-cb"><input type="checkbox" id="f_hasLMS"> LMS-доступ выдан</label>
+        <div class="form-section-title">4. Документы</div>
+        <div class="cb-row">
+          <label class="cb-label"><input type="checkbox" id="f_hasProg"> 📋 Программа</label>
+          <label class="cb-label"><input type="checkbox" id="f_hasKP"> 📄 КП</label>
+          <label class="cb-label"><input type="checkbox" id="f_hasContract"> 📝 Договор</label>
+          <label class="cb-label"><input type="checkbox" id="f_hasRequest"> 📩 Заявка</label>
+          <label class="cb-label"><input type="checkbox" id="f_hasLMS"> 🖥 LMS-доступы</label>
         </div>
+      </div>
+      <!-- 5. Ссылки -->
+      <div class="form-section">
+        <div class="form-section-title">5. Ссылки</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="form-group"><label>Bitrix24</label><div class="link-row"><input id="f_bitrixLink" type="text" placeholder="https://..."><button class="btn btn-gray btn-sm" onclick="openLink('f_bitrixLink')">🔗 Открыть</button></div></div>
+          <div class="form-group"><label>Documentolog</label><div class="link-row"><input id="f_documentologLink" type="text" placeholder="https://..."><button class="btn btn-gray btn-sm" onclick="openLink('f_documentologLink')">🔗 Открыть</button></div></div>
+          <div class="form-group"><label>Папка проекта</label><div class="link-row"><input id="f_folderLink" type="text" placeholder="https://..."><button class="btn btn-gray btn-sm" onclick="openLink('f_folderLink')">🔗 Открыть</button></div></div>
+          <div class="form-group"><label>КП файл</label><div class="link-row"><input id="f_kpFileLink" type="text" placeholder="https://..."><button class="btn btn-gray btn-sm" onclick="openLink('f_kpFileLink')">🔗 Открыть</button></div></div>
+          <div class="form-group"><label>Договор</label><div class="link-row"><input id="f_contractLink" type="text" placeholder="https://..."><button class="btn btn-gray btn-sm" onclick="openLink('f_contractLink')">🔗 Открыть</button></div></div>
+        </div>
+      </div>
+      <!-- 6. История -->
+      <div class="form-section">
+        <div class="form-section-title">6. История изменений</div>
+        <div class="history-list" id="projectHistory"><div style="color:var(--gray-mid);font-size:13px">История будет доступна после сохранения</div></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-gray" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveProject()">Сохранить</button>
+      <button class="btn btn-primary" onclick="saveProject()">💾 Сохранить</button>
     </div>
   </div>
 </div>
 
-<!-- Confirm Modal -->
-<div class="modal-overlay hidden" id="confirmOverlay">
-  <div class="confirm-modal">
-    <div style="font-size:36px">⚠️</div>
-    <p id="confirmText">Вы уверены?</p>
-    <div style="display:flex;gap:10px;justify-content:center">
+<!-- CLIENT MODAL -->
+<div class="modal-overlay hidden" id="clientModalOverlay">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-title" id="clientModalTitle">Карточка клиента</div>
+      <button class="modal-close" onclick="closeClientModal()">×</button>
+    </div>
+    <div class="modal-body" id="clientModalBody"></div>
+    <div class="modal-footer"><button class="btn btn-gray" onclick="closeClientModal()">Закрыть</button></div>
+  </div>
+</div>
+
+<!-- TRAINER MODAL -->
+<div class="modal-overlay hidden" id="trainerModalOverlay">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="trainerModalTitle">Тренер</div>
+      <button class="modal-close" onclick="closeTrainerModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>ФИО *</label><input id="t_name" type="text"></div>
+        <div class="form-group full"><label>Темы обучения (через запятую)</label><input id="t_topics" type="text"></div>
+        <div class="form-group"><label>Стоимость в день (₸)</label><input id="t_costPerDay" type="number" min="0"></div>
+        <div class="form-group"><label>Город</label><input id="t_city" type="text"></div>
+        <div class="form-group"><label>Телефон</label><input id="t_phone" type="text"></div>
+        <div class="form-group"><label>Email</label><input id="t_email" type="email"></div>
+        <div class="form-group"><label>Рейтинг (1-5)</label><input id="t_rating" type="number" min="1" max="5" step="0.1"></div>
+        <div class="form-group"><label>Последний проект</label><input id="t_lastProject" type="text"></div>
+        <div class="form-group full"><label>Формат работы</label>
+          <div class="cb-row">
+            <label class="cb-label"><input type="checkbox" id="t_isOnline"> Онлайн</label>
+            <label class="cb-label"><input type="checkbox" id="t_isOffline"> Очно</label>
+          </div>
+        </div>
+        <div class="form-group full"><label>Примечания</label><textarea id="t_notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeTrainerModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveTrainer()">💾 Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- LMS MODAL -->
+<div class="modal-overlay hidden" id="lmsModalOverlay">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="lmsModalTitle">LMS запись</div>
+      <button class="modal-close" onclick="closeLmsModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Компания *</label><input id="l_company" type="text"></div>
+        <div class="form-group"><label>Проект</label><input id="l_project" type="text"></div>
+        <div class="form-group"><label>Кол-во участников</label><input id="l_totalParticipants" type="number" min="0"></div>
+        <div class="form-group"><label>Прошли обучение</label><input id="l_completed" type="number" min="0"></div>
+        <div class="form-group"><label>Не прошли</label><input id="l_notCompleted" type="number" min="0"></div>
+        <div class="form-group"><label>Дата открытия доступа</label><input id="l_accessDate" type="date"></div>
+        <div class="form-group full">
+          <div class="cb-row">
+            <label class="cb-label"><input type="checkbox" id="l_listsReceived"> Списки получены</label>
+            <label class="cb-label"><input type="checkbox" id="l_accessOpen"> Доступ открыт</label>
+            <label class="cb-label"><input type="checkbox" id="l_certsSent"> Серт. выданы</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeLmsModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveLms()">💾 Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-text" id="confirmText"></div>
+    <div class="confirm-btns">
       <button class="btn btn-gray" onclick="closeConfirm()">Отмена</button>
-      <button class="btn btn-danger" id="confirmOkBtn">Подтвердить</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Да, подтверждаю</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div class="toast-container" id="toastContainer"></div>
+<!-- TOAST -->
+<div id="toastContainer"></div>
 
 <script>
 // ============================================================
 // DATA & CONSTANTS
 // ============================================================
-const STATUSES = ['Новая заявка','КП подготовлен','КП отправлен','Жду ответ','Согласование','Договор оформляется','Оплачен','В работе','Завершён','Отказ','Заморожен'];
-
+const FUNNEL_STAGES = ['Новый лид','Переговоры','Ждём программу','Ждём КП тренера','КП отправлено','На согласовании','Договор','Обучение проведено','Завершено','Проиграно'];
+const STATUSES = ['Новая заявка','КП подготовлен','КП отправлен','Жду ответ','Договор оформляется','В работе','Обучение проведено','Завершён','Отказ','Проиграно','Пауза'];
+const DONE_STATUSES = ['Завершён','Отказ','Проиграно'];
 const STATUS_COLORS = {
-  'Новая заявка': 'badge-blue',
-  'КП подготовлен': 'badge-yellow',
-  'КП отправлен': 'badge-orange',
-  'Жду ответ': 'badge-purple',
-  'Согласование': 'badge-cyan',
-  'Договор оформляется': 'badge-blue',
-  'Оплачен': 'badge-green',
-  'В работе': 'badge-blue',
-  'Завершён': 'badge-green',
-  'Отказ': 'badge-red',
-  'Заморожен': 'badge-gray'
+  'Новая заявка':'badge-blue','КП подготовлен':'badge-blue','КП отправлен':'badge-blue',
+  'Жду ответ':'badge-yellow','Договор оформляется':'badge-orange','В работе':'badge-orange',
+  'Обучение проведено':'badge-green','Завершён':'badge-green','Отказ':'badge-red','Проиграно':'badge-red','Пауза':'badge-gray'
 };
+const PRIORITY_COLORS = {'Высокий':'badge-red','Средний':'badge-yellow','Низкий':'badge-gray'};
+const PAGE_SIZE = 20;
 
-const PRIORITY_COLORS = { 'Высокий': 'badge-red', 'Средний': 'badge-yellow', 'Низкий': 'badge-gray' };
-
-const DEFAULT_DATA = [
+const DEFAULT_PROJECTS = [
   {
-    id: 1, name: 'Тренинг «Управление проектами (PMBoK)»', client: 'АО «КазМунайГаз»',
-    contact: 'Асем Нурланова', phone: '+7 701 234 56 78', email: 'anurlanova@kmg.kz',
-    topic: 'Управление проектами', format: 'Очный тренинг', city: 'Астана', participants: 25,
-    language: 'Русский', trainer: 'Берик Сейтжанов', status: 'В работе', stage: 'Подготовка материалов',
-    deadline: '2026-06-20', requestDate: '2026-05-10', kpDate: '2026-05-15',
-    kpAmount: 3500000, trainerCost: 1800000, vat: 12, margin: null,
-    source: 'Повторный клиент', manager: 'Динара Жаксыбекова', priority: 'Высокий',
-    comment: 'Провести в конференц-зале заказчика. Нужна флипчарт-бумага.',
-    nextAction: 'Подтвердить расписание с тренером', nextActionDate: '2026-06-05',
-    link: 'https://bitrix.sba.kz/12345',
-    hasProg: true, hasKP: true, hasContract: true, hasRequest: true, hasLMS: false,
-    payStatus: 'Частично оплачен'
+    id:1, name:'Лидерство для руководителей АО НК', client:'АО НК КазМунайГаз', contact:'Айгерим Нурланова',
+    phone:'+7 701 555 01 01', email:'anurlanoval@kmg.kz', topic:'Лидерство и управление командой',
+    format:'Очно', city:'Астана', participants:25, language:'Русский', trainer:'Берик Сейтжанов',
+    funnelStage:'На согласовании', status:'Жду ответ', priority:'Высокий', probability:75,
+    manager:'Дана Серикова', requestDate:'2026-05-10', deadline:'2026-06-20',
+    kpDate:'2026-05-15', kpAmount:3750000, trainerCost:750000, vat:12, contractAmount:0,
+    kpSentDate:'2026-05-16', payStatus:'Не оплачено', source:'Входящий запрос',
+    nextAction:'Позвонить для уточнения решения', nextActionDate:'2026-06-05',
+    hasProg:true, hasKP:true, hasContract:false, hasRequest:true, hasLMS:false,
+    stage:'КП отправлено, ждём подтверждения', comment:'Важный клиент, нужен срочный контроль',
+    bitrixLink:'https://bitrix24.kz/deal/1', documentologLink:'', folderLink:'', kpFileLink:'', contractLink:'',
+    history:[
+      {date:'2026-05-10',user:'Дана Серикова',action:'Создан',comment:'Новая заявка от КМГ'},
+      {date:'2026-05-15',user:'Дана Серикова',action:'Обновлён',comment:'КП подготовлено и отправлено'},
+      {date:'2026-05-20',user:'Дана Серикова',action:'Обновлён',comment:'Статус изменён на «Жду ответ»'}
+    ]
   },
   {
-    id: 2, name: 'Воркшоп «Agile & Scrum для команд»', client: 'ТОО «Jusan Bank»',
-    contact: 'Даурен Касымов', phone: '+7 777 345 67 89', email: 'dkasymov@jusan.kz',
-    topic: 'Agile / Scrum', format: 'Гибридный', city: 'Алматы', participants: 30,
-    language: 'Русский', trainer: 'Айгерим Сатпаева', status: 'Жду ответ', stage: 'Ожидание согласования КП',
-    deadline: '2026-07-10', requestDate: '2026-05-28', kpDate: '2026-06-01',
-    kpAmount: 2100000, trainerCost: 1000000, vat: 0, margin: null,
-    source: 'Email', manager: 'Нурлан Ахметов', priority: 'Высокий',
-    comment: 'Просили прислать примеры кейсов из банковского сектора.',
-    nextAction: 'Позвонить Даурену — уточнить решение по КП', nextActionDate: '2026-06-04',
-    link: '',
-    hasProg: true, hasKP: true, hasContract: false, hasRequest: true, hasLMS: false,
-    payStatus: ''
+    id:2, name:'Продажи B2B: продвинутый уровень', client:'Kaspi Bank', contact:'Марат Жаксыбеков',
+    phone:'+7 702 555 02 02', email:'marat.zhaksybekov@kaspi.kz', topic:'Продажи B2B, Переговоры',
+    format:'Онлайн', city:'Алматы', participants:40, language:'Русский', trainer:'Айгерим Сатпаева',
+    funnelStage:'Договор', status:'Договор оформляется', priority:'Высокий', probability:90,
+    manager:'Дана Серикова', requestDate:'2026-05-01', deadline:'2026-06-10',
+    kpDate:'2026-05-05', kpAmount:5200000, trainerCost:900000, vat:12, contractAmount:5200000,
+    kpSentDate:'2026-05-06', payStatus:'Частично оплачено', source:'Рекомендация',
+    nextAction:'Подписать договор', nextActionDate:'2026-06-04',
+    hasProg:true, hasKP:true, hasContract:true, hasRequest:true, hasLMS:false,
+    stage:'Договор на подписании', comment:'Срочно подписать до 10 июня',
+    bitrixLink:'', documentologLink:'https://documentolog.kz/doc/2', folderLink:'', kpFileLink:'', contractLink:'',
+    history:[
+      {date:'2026-05-01',user:'Дана Серикова',action:'Создан',comment:'Заявка от Kaspi'},
+      {date:'2026-05-06',user:'Дана Серикова',action:'Обновлён',comment:'КП отправлено клиенту'},
+      {date:'2026-05-25',user:'Дана Серикова',action:'Обновлён',comment:'Договор согласован, отправлен на подпись'}
+    ]
   },
   {
-    id: 3, name: 'Онлайн-курс «Эффективная коммуникация»', client: 'АО «Air Astana»',
-    contact: 'Гульнара Бейсенова', phone: '+7 702 456 78 90', email: 'gbeisenova@airastana.com',
-    topic: 'Soft Skills / Коммуникации', format: 'Онлайн-вебинар', city: 'Алматы', participants: 50,
-    language: 'Казахский', trainer: 'Зарина Мухамедова', status: 'КП подготовлен', stage: 'Доработка КП',
-    deadline: '2026-06-25', requestDate: '2026-06-01', kpDate: '',
-    kpAmount: 1800000, trainerCost: 900000, vat: 12, margin: null,
-    source: 'Входящий звонок', manager: 'Динара Жаксыбекова', priority: 'Средний',
-    comment: 'Нужна адаптация на казахский язык всех материалов.',
-    nextAction: 'Отправить финальный КП', nextActionDate: '2026-06-06',
-    link: 'https://bitrix.sba.kz/12348',
-    hasProg: true, hasKP: false, hasContract: false, hasRequest: true, hasLMS: false,
-    payStatus: ''
+    id:3, name:'Agile для IT-команд', client:'Kcell', contact:'Нурия Сейткали',
+    phone:'+7 703 555 03 03', email:'n.seitkali@kcell.kz', topic:'Agile, Scrum',
+    format:'Очно/Онлайн', city:'Алматы', participants:20, language:'Русский', trainer:'Нурбек Алиев',
+    funnelStage:'КП отправлено', status:'КП отправлен', priority:'Средний', probability:50,
+    manager:'Асель Бекова', requestDate:'2026-05-18', deadline:'2026-07-01',
+    kpDate:'2026-05-22', kpAmount:2800000, trainerCost:600000, vat:0, contractAmount:0,
+    kpSentDate:'2026-05-23', payStatus:'', source:'Сайт',
+    nextAction:'Уточнить решение по КП', nextActionDate:'2026-06-06',
+    hasProg:true, hasKP:true, hasContract:false, hasRequest:true, hasLMS:false,
+    stage:'КП отправлено, ждём решения', comment:'',
+    bitrixLink:'', documentologLink:'', folderLink:'', kpFileLink:'', contractLink:'',
+    history:[
+      {date:'2026-05-18',user:'Асель Бекова',action:'Создан',comment:'Заявка через сайт'},
+      {date:'2026-05-23',user:'Асель Бекова',action:'Обновлён',comment:'КП подготовлено Нурбеком и отправлено'}
+    ]
   },
   {
-    id: 4, name: 'Коучинг топ-менеджеров (6 сессий)', client: 'ТОО «Qazaq Stroy»',
-    contact: 'Марат Дуйсенов', phone: '+7 705 567 89 01', email: 'mduysenov@qazstroy.kz',
-    topic: 'Коучинг / Лидерство', format: 'Коучинг', city: 'Астана', participants: 5,
-    language: 'Смешанный (KZ/RU)', trainer: 'Берик Сейтжанов', status: 'Завершён', stage: 'Завершено',
-    deadline: '2026-05-30', requestDate: '2026-03-15', kpDate: '2026-03-20',
-    kpAmount: 4200000, trainerCost: 2000000, vat: 12, margin: null,
-    source: 'Рекомендация', manager: 'Нурлан Ахметов', priority: 'Высокий',
-    comment: 'Провели все 6 сессий успешно. Клиент доволен.',
-    nextAction: 'Запросить отзыв и NPS', nextActionDate: '2026-06-10',
-    link: 'https://bitrix.sba.kz/11200',
-    hasProg: true, hasKP: true, hasContract: true, hasRequest: true, hasLMS: true,
-    payStatus: 'Полностью оплачен'
+    id:4, name:'Soft Skills для HR-специалистов', client:'Halyk Bank', contact:'Жанат Ибраев',
+    phone:'+7 704 555 04 04', email:'zhanat.ibraev@halykbank.kz', topic:'Soft Skills, Коммуникации',
+    format:'Очно', city:'Алматы', participants:30, language:'Казахский/Русский', trainer:'Зарина Мухамедова',
+    funnelStage:'Обучение проведено', status:'Обучение проведено', priority:'Средний', probability:100,
+    manager:'Асель Бекова', requestDate:'2026-04-10', deadline:'2026-05-30',
+    kpDate:'2026-04-15', kpAmount:4100000, trainerCost:750000, vat:12, contractAmount:4100000,
+    kpSentDate:'2026-04-16', payStatus:'Оплачено', source:'Входящий запрос',
+    nextAction:'Отправить сертификаты', nextActionDate:'2026-06-07',
+    hasProg:true, hasKP:true, hasContract:true, hasRequest:true, hasLMS:true,
+    stage:'Обучение проведено, закрытие', comment:'Отличная обратная связь от клиента',
+    bitrixLink:'', documentologLink:'', folderLink:'', kpFileLink:'', contractLink:'',
+    history:[
+      {date:'2026-04-10',user:'Асель Бекова',action:'Создан',comment:'Заявка от Halyk Bank'},
+      {date:'2026-04-16',user:'Асель Бекова',action:'Обновлён',comment:'КП отправлено'},
+      {date:'2026-05-05',user:'Асель Бекова',action:'Обновлён',comment:'Договор подписан, оплата поступила'},
+      {date:'2026-05-30',user:'Асель Бекова',action:'Обновлён',comment:'Обучение проведено успешно'}
+    ]
   },
   {
-    id: 5, name: 'Тренинг «Продажи B2B»', client: 'ТОО «Technodom»',
-    contact: 'Айдана Сейткали', phone: '+7 707 678 90 12', email: 'aseitkali@technodom.kz',
-    topic: 'Продажи B2B', format: 'Очный тренинг', city: 'Алматы', participants: 15,
-    language: 'Русский', trainer: 'Айгерим Сатпаева', status: 'Новая заявка', stage: 'Первичный контакт',
-    deadline: '2026-07-15', requestDate: '2026-06-03', kpDate: '',
-    kpAmount: 0, trainerCost: 0, vat: 0, margin: null,
-    source: 'WhatsApp', manager: 'Динара Жаксыбекова', priority: 'Средний',
-    comment: 'Пришёл холодный запрос. Нужно уточнить детали и подготовить КП.',
-    nextAction: 'Провести звонок-диагностику и подготовить КП', nextActionDate: '2026-06-05',
-    link: '',
-    hasProg: false, hasKP: false, hasContract: false, hasRequest: true, hasLMS: false,
-    payStatus: ''
+    id:5, name:'Управление проектами PMI', client:'Самрук-Казына', contact:'Болат Ахметов',
+    phone:'+7 701 555 05 05', email:'b.akhmetov@samruk.kz', topic:'Управление проектами',
+    format:'Очно', city:'Астана', participants:15, language:'Русский', trainer:'Берик Сейтжанов',
+    funnelStage:'Ждём программу', status:'Новая заявка', priority:'Высокий', probability:25,
+    manager:'Дана Серикова', requestDate:'2026-06-01', deadline:'2026-07-15',
+    kpDate:'', kpAmount:0, trainerCost:0, vat:0, contractAmount:0,
+    kpSentDate:'', payStatus:'', source:'Тендер',
+    nextAction:'Запросить программу у тренера', nextActionDate:'2026-06-04',
+    hasProg:false, hasKP:false, hasContract:false, hasRequest:true, hasLMS:false,
+    stage:'Новый лид, нужна программа', comment:'Тендерный запрос, срочно нужна программа',
+    bitrixLink:'', documentologLink:'', folderLink:'', kpFileLink:'', contractLink:'',
+    history:[
+      {date:'2026-06-01',user:'Дана Серикова',action:'Создан',comment:'Тендерный запрос от Самрук-Казына'}
+    ]
   }
 ];
 
-let projects = [];
-let editingId = null;
-let sortField = 'deadline';
-let sortDir = 1;
-let currentPage = 1;
-const PAGE_SIZE = 20;
-let filteredProjects = [];
+const DEFAULT_TRAINERS = [
+  {id:1, name:'Берик Сейтжанов', topics:'Управление проектами, Лидерство', costPerDay:250000, city:'Астана', isOnline:true, isOffline:true, phone:'+7 701 111 22 33', email:'b.seitzhanov@trainer.kz', rating:4.8, lastProject:'Управление проектами PMI', notes:'Сертифицированный PMP, 10 лет опыта'},
+  {id:2, name:'Айгерим Сатпаева', topics:'Продажи B2B, Переговоры', costPerDay:180000, city:'Алматы', isOnline:false, isOffline:true, phone:'+7 702 222 33 44', email:'a.satpaeva@trainer.kz', rating:4.6, lastProject:'Продажи B2B: продвинутый уровень', notes:'Опыт в продажах 12 лет'},
+  {id:3, name:'Зарина Мухамедова', topics:'Soft Skills, Коммуникации', costPerDay:150000, city:'Алматы', isOnline:true, isOffline:false, phone:'+7 703 333 44 55', email:'z.mukhamedova@trainer.kz', rating:4.5, lastProject:'Soft Skills для HR-специалистов', notes:'Психолог, коуч ICF'},
+  {id:4, name:'Нурбек Алиев', topics:'Agile, Scrum, Product Management', costPerDay:200000, city:'Астана', isOnline:true, isOffline:true, phone:'+7 704 444 55 66', email:'n.aliev@trainer.kz', rating:4.7, lastProject:'Agile для IT-команд', notes:'Certified Scrum Master, SAFe'}
+];
+
+const DEFAULT_LMS = [
+  {id:1, company:'Halyk Bank', project:'Soft Skills для HR-специалистов', totalParticipants:30, completed:27, notCompleted:3, listsReceived:true, accessOpen:true, accessDate:'2026-05-10', certsSent:false},
+  {id:2, company:'Kaspi Bank', project:'Продажи B2B: продвинутый уровень', totalParticipants:40, completed:0, notCompleted:0, listsReceived:false, accessOpen:false, accessDate:'', certsSent:false}
+];
+
+const TEMPLATES = [
+  {
+    name:'1. Запрос программы тренеру',
+    text:`Добрый день, [Имя тренера]!
+
+Меня зовут [Ваше имя], я менеджер Samruk Business Academy. Мы получили запрос от компании [Заказчик] на проведение тренинга по теме [Тема].
+
+Прошу направить программу обучения для согласования с клиентом.
+
+Формат: [Формат]
+Дата: [Дата]
+Количество участников: [Кол-во]
+Город: [Город]
+
+Заранее спасибо!`
+  },
+  {
+    name:'2. Запрос КП тренеру',
+    text:`Добрый день, [Имя тренера]!
+
+Прошу направить коммерческое предложение для клиента [Заказчик] по тренингу «[Тема]».
+
+Параметры:
+- Формат: [Формат]
+- Даты: [Дата]
+- Количество участников: [Кол-во]
+- Город: [Город]
+
+Срок ответа: [Срок]. Благодарю!`
+  },
+  {
+    name:'3. Отправка КП клиенту',
+    text:`Добрый день, [Имя контакта]!
+
+Благодарим за обращение в Samruk Business Academy.
+
+По вашему запросу на тренинг «[Название тренинга]» подготовили коммерческое предложение — оно прикреплено к письму.
+
+Кратко о программе:
+- Тема: [Тема]
+- Формат: [Формат]
+- Тренер: [Тренер]
+- Стоимость: [Сумма] ₸
+
+Готовы ответить на любые вопросы. Жду вашего решения!`
+  },
+  {
+    name:'4. Напоминание клиенту',
+    text:`Добрый день, [Имя контакта]!
+
+Хотел(а) уточнить статус по нашему предложению для [Заказчик] по тренингу «[Тема]».
+
+КП было направлено [Дата]. Если возникли вопросы — с удовольствием отвечу или организуем встречу для обсуждения деталей.
+
+Жду вашего ответа!`
+  },
+  {
+    name:'5. Запрос списка слушателей',
+    text:`Добрый день, [Имя контакта]!
+
+Для открытия доступов на платформе LMS нам необходим список участников тренинга «[Название тренинга]».
+
+Пожалуйста, пришлите список в формате Excel со следующими полями:
+1. ФИО (полностью)
+2. Email
+3. Должность
+
+Срок начала обучения: [Дата]. Просим прислать список до [Дата - 3 дня]. Спасибо!`
+  },
+  {
+    name:'6. Отправка LMS-доступов',
+    text:`Добрый день, [Имя контакта]!
+
+Доступы к платформе обучения для сотрудников [Заказчик] открыты.
+
+Ссылка на платформу: [Ссылка LMS]
+Логин: корпоративный email участника
+Пароль: будет выслан каждому участнику отдельно
+
+Срок прохождения обучения: до [Дата окончания].
+
+При возникновении технических вопросов обращайтесь: support@sba.kz`
+  },
+  {
+    name:'7. Подтверждение даты обучения',
+    text:`Добрый день, [Имя контакта]!
+
+Подтверждаем проведение тренинга «[Название тренинга]» для сотрудников [Заказчик].
+
+Дата: [Дата]
+Время: [Время]
+Место / Ссылка: [Адрес или ссылка Zoom/Teams]
+Тренер: [Тренер]
+
+Просим обеспечить явку всех [Кол-во] участников. При изменениях просьба уведомить за 2 дня.
+
+До встречи!`
+  },
+  {
+    name:'8. Запрос обратной связи',
+    text:`Добрый день, [Имя контакта]!
+
+Тренинг «[Название тренинга]» завершён. Благодарим [Заказчик] за доверие к Samruk Business Academy!
+
+Просим уделить 3 минуты и оценить качество обучения:
+🔗 [Ссылка на анкету]
+
+Ваша обратная связь помогает нам становиться лучше.
+
+Если остались вопросы или пожелания — пишите нам. Будем рады сотрудничеству!`
+  }
+];
 
 // ============================================================
-// INIT
+// STATE
 // ============================================================
-function init() {
-  const stored = localStorage.getItem('sba_projects');
-  if (stored) {
-    projects = JSON.parse(stored);
-  } else {
-    projects = DEFAULT_DATA.map(p => ({ ...p, margin: calcProjectMargin(p) }));
-    save();
-  }
-  render();
+let projects = [], trainers = [], lmsData = [];
+let filteredProjects = [], currentPage = 1, sortKey = '', sortDir = 1;
+let editingId = null, editingTrainerId = null, editingLmsId = null;
+let calYear, calMonth;
+let chartStatus = null, chartKP = null, chartMonthly = null;
+
+// ============================================================
+// UTILS
+// ============================================================
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+function fmtMoney(v) {
+  if (!v && v !== 0) return '—';
+  return Number(v).toLocaleString('ru-KZ', {maximumFractionDigits:0}).replace(/,/g,' ') + ' ₸';
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  const [y,m,d] = s.split('-');
+  return `${d}.${m}.${y}`;
+}
+function isOverdue(d) { return d && d < today(); }
+function isSoon(d) {
+  if (!d) return false;
+  const t = today();
+  const dd = new Date(d), tt = new Date(t);
+  const diff = (dd - tt) / 86400000;
+  return diff >= 0 && diff <= 2;
+}
+function daysBetween(a, b) {
+  return Math.floor((new Date(b) - new Date(a)) / 86400000);
+}
+function showToast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+function confirmAction(text, cb) {
+  document.getElementById('confirmText').textContent = text;
+  document.getElementById('confirmOkBtn').onclick = () => { cb(); closeConfirm(); };
+  document.getElementById('confirmOverlay').classList.remove('hidden');
+}
+function closeConfirm() { document.getElementById('confirmOverlay').classList.add('hidden'); }
+function openLink(fieldId) {
+  const url = document.getElementById(fieldId)?.value;
+  if (url) window.open(url, '_blank'); else showToast('Ссылка не указана', 'error');
+}
+function starsHtml(r) {
+  const full = Math.floor(r), half = r % 1 >= 0.5;
+  let s = '';
+  for (let i=0; i<full; i++) s += '★';
+  if (half) s += '½';
+  for (let i=full+(half?1:0); i<5; i++) s += '☆';
+  return `<span class="stars" title="${r}">${s} ${r}</span>`;
+}
+function calcProjectMargin(p) {
+  const kp = parseFloat(p.kpAmount) || 0;
+  const cost = parseFloat(p.trainerCost) || 0;
+  const vat = parseInt(p.vat) || 0;
+  const vatAmt = kp * (vat / (100 + vat));
+  return Math.round(kp - vatAmt - cost);
 }
 
+// ============================================================
+// STORAGE
+// ============================================================
+function load() {
+  const sp = localStorage.getItem('sba_projects');
+  const st = localStorage.getItem('sba_trainers');
+  const sl = localStorage.getItem('sba_lms');
+  projects = sp ? JSON.parse(sp) : DEFAULT_PROJECTS.map(p => ({...p, margin: calcProjectMargin(p)}));
+  trainers = st ? JSON.parse(st) : [...DEFAULT_TRAINERS];
+  lmsData = sl ? JSON.parse(sl) : [...DEFAULT_LMS];
+  if (!sp) save();
+}
 function save() {
   localStorage.setItem('sba_projects', JSON.stringify(projects));
+  localStorage.setItem('sba_trainers', JSON.stringify(trainers));
+  localStorage.setItem('sba_lms', JSON.stringify(lmsData));
+}
+function confirmReset() {
+  confirmAction('Сбросить все данные? Текущие проекты будут удалены.', () => {
+    localStorage.removeItem('sba_projects');
+    localStorage.removeItem('sba_trainers');
+    localStorage.removeItem('sba_lms');
+    load(); render();
+    showToast('Данные сброшены', 'success');
+  });
 }
 
-function calcProjectMargin(p) {
-  if (!p.kpAmount || p.kpAmount <= 0) return null;
-  const vat = p.vat ? p.kpAmount * (p.vat / (100 + p.vat)) : 0;
-  const revenue = p.kpAmount - vat;
-  const cost = p.trainerCost || 0;
-  return revenue - cost;
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+function showTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + tab).classList.add('active');
+  const tabs = ['dashboard','projects','trainers','lms','calendar','analytics','templates'];
+  const idx = tabs.indexOf(tab);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if (tab === 'analytics') renderAnalytics();
+  if (tab === 'calendar') renderCalendar();
+  if (tab === 'lms') renderLms();
+  if (tab === 'trainers') renderTrainers();
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'projects') { populateFilters(); applyFilters(); }
 }
 
 // ============================================================
 // RENDER
 // ============================================================
 function render() {
+  const activeTab = document.querySelector('.section.active')?.id?.replace('sec-','') || 'dashboard';
+  showTab(activeTab);
+}
+
+function renderDashboard() {
   renderKPI();
-  renderCharts();
-  renderAlertBlocks();
-  populateFilters();
-  applyFilters();
+  renderTodayTasks();
+  renderFunnel();
+  renderAlertGrid();
+  renderKPControl();
 }
 
-function today() { return new Date().toISOString().split('T')[0]; }
-function todayDate() { return new Date(); }
-
-function isOverdue(dateStr) {
-  if (!dateStr) return false;
-  return dateStr < today();
-}
-
-function isSoon(dateStr) {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  const now = todayDate();
-  const diff = (d - now) / (1000 * 60 * 60 * 24);
-  return diff >= 0 && diff <= 2;
-}
-
-function fmtDate(dateStr) {
-  if (!dateStr) return '—';
-  const [y, m, d] = dateStr.split('-');
-  return `${d}.${m}.${y}`;
-}
-
-function fmtMoney(v) {
-  if (!v || v === 0) return '—';
-  return Number(v).toLocaleString('ru-KZ') + ' ₸';
-}
-
+// ============================================================
 // KPI
+// ============================================================
 function renderKPI() {
-  const active = projects.filter(p => !['Завершён','Отказ'].includes(p.status)).length;
-  const done = projects.filter(p => p.status === 'Завершён').length;
-  const overdueActions = projects.filter(p => p.nextActionDate && isOverdue(p.nextActionDate) && p.status !== 'Завершён' && p.status !== 'Отказ').length;
-  const todayActions = projects.filter(p => p.nextActionDate === today() && !['Завершён','Отказ'].includes(p.status)).length;
-  const totalKP = projects.filter(p => p.kpAmount > 0).reduce((s, p) => s + (p.kpAmount || 0), 0);
-  const avgKP = projects.filter(p => p.kpAmount > 0).length > 0 ? totalKP / projects.filter(p => p.kpAmount > 0).length : 0;
-  const waiting = projects.filter(p => p.status === 'Жду ответ').length;
-  const noKP = projects.filter(p => !p.hasKP && !['Завершён','Отказ'].includes(p.status)).length;
+  const t = today();
+  const active = projects.filter(p => !DONE_STATUSES.includes(p.status));
+  const overdue = projects.filter(p => p.nextActionDate && isOverdue(p.nextActionDate) && !DONE_STATUSES.includes(p.status));
+  const todayTasks = projects.filter(p => p.nextActionDate === t && !DONE_STATUSES.includes(p.status));
+  const waitReply = projects.filter(p => p.status === 'Жду ответ');
+  const kpSum = projects.reduce((s,p) => s + (parseFloat(p.kpAmount)||0), 0);
+  const contractSum = projects.reduce((s,p) => s + (parseFloat(p.contractAmount)||0), 0);
+  const forecast = projects.filter(p => !DONE_STATUSES.includes(p.status))
+    .reduce((s,p) => s + (parseFloat(p.kpAmount)||0) * ((parseFloat(p.probability)||0)/100), 0);
+  const kpAmounts = projects.map(p => parseFloat(p.kpAmount)||0).filter(v => v > 0);
+  const avgKP = kpAmounts.length ? kpAmounts.reduce((a,b) => a+b, 0) / kpAmounts.length : 0;
 
-  const kpis = [
-    { label: 'Активных проектов', value: active, sub: `Всего: ${projects.length}`, cls: '' },
-    { label: 'Завершено', value: done, sub: 'проектов', cls: 'green', valcls: 'green' },
-    { label: 'Просрочено задач', value: overdueActions, sub: 'требуют внимания', cls: 'red', valcls: 'red' },
-    { label: 'Задач сегодня', value: todayActions, sub: 'запланировано', cls: 'yellow', valcls: 'yellow' },
-    { label: 'Жду ответ', value: waiting, sub: 'проектов', cls: '', valcls: '' },
-    { label: 'Без КП', value: noKP, sub: 'нужно подготовить', cls: 'orange', valcls: '' },
-    { label: 'Сумма всех КП', value: fmtMoney(totalKP), sub: 'по активным и завершённым', cls: '', valcls: '', isText: true },
-    { label: 'Средний КП', value: fmtMoney(Math.round(avgKP)), sub: 'на проект', cls: '', valcls: '', isText: true },
-  ];
-
-  document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+  document.getElementById('kpiRow').innerHTML = [
+    {label:'Активных проектов', val:active.length, cls:''},
+    {label:'Просрочено задач', val:overdue.length, cls:'red'},
+    {label:'Задач сегодня', val:todayTasks.length, cls:'yellow'},
+    {label:'Жду ответ', val:waitReply.length, cls:''},
+    {label:'Сумма КП', val:fmtMoney(kpSum), cls:'green', small:true},
+    {label:'Подписано договоров', val:fmtMoney(contractSum), cls:'green', small:true},
+    {label:'Прогноз выручки', val:fmtMoney(Math.round(forecast)), cls:'orange', small:true},
+    {label:'Средний чек', val:fmtMoney(Math.round(avgKP)), cls:'', small:true}
+  ].map(k => `
     <div class="kpi-card ${k.cls}">
       <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value ${k.valcls || ''}" style="${k.isText ? 'font-size:16px' : ''}">${k.value}</div>
-      <div class="kpi-sub">${k.sub}</div>
-    </div>
-  `).join('');
+      <div class="kpi-value ${k.cls} ${k.small ? 'style="font-size:16px"' : ''}">${k.val}</div>
+    </div>`).join('');
 }
 
-// Charts
-let chartStatus = null, chartKP = null;
+// ============================================================
+// TODAY TASKS
+// ============================================================
+function renderTodayTasks() {
+  const t = today();
+  const items = projects
+    .filter(p => !DONE_STATUSES.includes(p.status) && p.nextActionDate)
+    .map(p => {
+      let urgency = 'soon';
+      if (isOverdue(p.nextActionDate)) urgency = 'overdue';
+      else if (p.nextActionDate === t) urgency = 'today';
+      else if (p.nextActionDate > t) urgency = 'soon';
+      return {...p, urgency};
+    })
+    .filter(p => p.urgency === 'overdue' || p.urgency === 'today' || (p.urgency === 'soon' && daysBetween(t, p.nextActionDate) <= 7))
+    .sort((a,b) => {
+      const order = {overdue:0,today:1,soon:2};
+      return order[a.urgency] - order[b.urgency] || a.nextActionDate.localeCompare(b.nextActionDate);
+    });
 
-function renderCharts() {
-  // Status chart
-  const statusCounts = {};
-  STATUSES.forEach(s => { statusCounts[s] = 0; });
-  projects.forEach(p => { statusCounts[p.status] = (statusCounts[p.status] || 0) + 1; });
-  const statusLabels = Object.keys(statusCounts).filter(s => statusCounts[s] > 0);
-  const statusData = statusLabels.map(s => statusCounts[s]);
-  const colors = ['#2563a8','#d97706','#ea580c','#7c3aed','#0891b2','#3b82d4','#16a34a','#2563a8','#4ade80','#dc2626','#94a3b8'];
-
-  if (chartStatus) chartStatus.destroy();
-  chartStatus = new Chart(document.getElementById('chartStatus'), {
-    type: 'doughnut',
-    data: { labels: statusLabels, datasets: [{ data: statusData, backgroundColor: colors.slice(0, statusLabels.length), borderWidth: 2, borderColor: '#fff' }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 8 } } } }
-  });
-
-  // KP bar chart
-  const kpProjects = projects.filter(p => p.kpAmount > 0).slice(0, 8);
-  if (chartKP) chartKP.destroy();
-  chartKP = new Chart(document.getElementById('chartKP'), {
-    type: 'bar',
-    data: {
-      labels: kpProjects.map(p => p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name),
-      datasets: [{
-        label: 'Сумма КП (₸)',
-        data: kpProjects.map(p => p.kpAmount),
-        backgroundColor: '#2563a8cc',
-        borderColor: '#1a3a5c',
-        borderWidth: 1,
-        borderRadius: 4
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { ticks: { callback: v => (v/1000000).toFixed(1) + 'M', font: { size: 11 } }, grid: { color: '#f0f4fa' } },
-        x: { ticks: { font: { size: 10 } } }
-      }
-    }
-  });
-}
-
-// Alert Blocks
-function renderAlertBlocks() {
-  const todayStr = today();
-  const urgent = projects.filter(p => p.nextActionDate && isOverdue(p.nextActionDate) && !['Завершён','Отказ'].includes(p.status));
-  const waiting = projects.filter(p => p.status === 'Жду ответ');
-  const needKP = projects.filter(p => !p.hasKP && !['Завершён','Отказ'].includes(p.status));
-  const needProg = projects.filter(p => !p.hasProg && !['Завершён','Отказ'].includes(p.status));
-  const needContract = projects.filter(p => !p.hasContract && ['Оплачен','В работе','Согласование'].includes(p.status));
-  const needLMS = projects.filter(p => !p.hasLMS && p.status === 'В работе');
-  const done = projects.filter(p => p.status === 'Завершён');
-
-  function items(list) {
-    if (!list.length) return '<div class="alert-empty">Нет записей</div>';
-    return list.slice(0, 4).map(p => `
-      <div class="alert-item" onclick="openModal(${p.id})">
-        <strong>${p.name}</strong>
-        <span>${p.client}${p.nextActionDate ? ' · ' + fmtDate(p.nextActionDate) : ''}</span>
-      </div>
-    `).join('') + (list.length > 4 ? `<div class="alert-empty">+${list.length - 4} ещё</div>` : '');
+  if (!items.length) {
+    document.getElementById('todayTasks').innerHTML = '<div style="color:var(--green);font-weight:600;padding:12px">✓ Задач на сегодня нет</div>';
+    return;
   }
-
-  document.getElementById('alertGrid').innerHTML = `
-    <div class="alert-block urgent">
-      <div class="alert-block-title"><span class="dot"></span>🔴 Срочно (${urgent.length})</div>
-      ${items(urgent)}
-    </div>
-    <div class="alert-block waiting">
-      <div class="alert-block-title"><span class="dot"></span>⏳ Жду ответ (${waiting.length})</div>
-      ${items(waiting)}
-    </div>
-    <div class="alert-block kp">
-      <div class="alert-block-title"><span class="dot"></span>📄 Нужен КП (${needKP.length})</div>
-      ${items(needKP)}
-    </div>
-    <div class="alert-block program">
-      <div class="alert-block-title"><span class="dot"></span>📋 Нужна программа (${needProg.length})</div>
-      ${items(needProg)}
-    </div>
-    <div class="alert-block contract">
-      <div class="alert-block-title"><span class="dot"></span>📝 Договор нужен (${needContract.length})</div>
-      ${items(needContract)}
-    </div>
-    <div class="alert-block lms">
-      <div class="alert-block-title"><span class="dot"></span>🖥 LMS-доступы (${needLMS.length})</div>
-      ${items(needLMS)}
-    </div>
-    <div class="alert-block done">
-      <div class="alert-block-title"><span class="dot"></span>✅ Завершено (${done.length})</div>
-      ${items(done)}
-    </div>
-  `;
+  document.getElementById('todayTasks').innerHTML = items.map(p => `
+    <div class="today-item ${p.urgency}" onclick="openModal(${p.id})" style="cursor:pointer">
+      <div style="flex:1">
+        <div class="today-item-action">${p.nextAction || 'Действие не указано'}</div>
+        <div class="today-item-meta">${p.name} · ${p.client} · ${fmtDate(p.nextActionDate)}</div>
+      </div>
+      <span class="badge ${PRIORITY_COLORS[p.priority]||'badge-gray'}">${p.priority}</span>
+    </div>`).join('');
 }
 
-// Populate filter dropdowns
+// ============================================================
+// FUNNEL
+// ============================================================
+function renderFunnel() {
+  const stageCounts = {};
+  FUNNEL_STAGES.forEach(s => stageCounts[s] = 0);
+  projects.forEach(p => { if (p.funnelStage && stageCounts[p.funnelStage] !== undefined) stageCounts[p.funnelStage]++; });
+  const total = projects.length || 1;
+  const colors = ['#1a3a5c','#1e4a70','#235985','#276a9a','#2b7baf','#2f8cc4','#16a34a','#15803d','#14532d','#dc2626'];
+  let prevCount = null;
+  const html = FUNNEL_STAGES.map((stage, i) => {
+    const count = stageCounts[stage];
+    const pct = Math.round((count / total) * 100);
+    const conv = prevCount !== null && prevCount > 0 ? Math.round((count / prevCount) * 100) : 100;
+    const width = Math.max(15, pct * 3 + 15);
+    if (stage !== 'Проиграно') prevCount = count;
+    return `
+      <div class="funnel-stage">
+        <div class="funnel-bar-wrap">
+          <div class="funnel-bar" style="width:${width}%;background:${colors[i]};min-width:60px">
+            ${stage}
+          </div>
+        </div>
+        <div class="funnel-info">${count} проектов ${i > 0 ? '· ' + conv + '%' : ''}</div>
+      </div>`;
+  }).join('');
+  document.getElementById('funnelBlock').innerHTML = html;
+}
+
+// ============================================================
+// ALERT GRID
+// ============================================================
+function renderAlertGrid() {
+  const t = today();
+  const zones = [
+    {icon:'🔴', title:'Срочно', filter: p => p.priority === 'Высокий' && !DONE_STATUSES.includes(p.status)},
+    {icon:'⏳', title:'Жду ответ', filter: p => p.status === 'Жду ответ'},
+    {icon:'📄', title:'Нужен КП', filter: p => !p.hasKP && !DONE_STATUSES.includes(p.status)},
+    {icon:'📋', title:'Нужна программа', filter: p => !p.hasProg && !DONE_STATUSES.includes(p.status)},
+    {icon:'📝', title:'Договор нужен', filter: p => !p.hasContract && ['Договор оформляется','В работе'].includes(p.status)},
+    {icon:'🖥', title:'LMS-доступы', filter: p => !p.hasLMS && ['В работе','Обучение проведено'].includes(p.status)},
+    {icon:'✅', title:'Завершено', filter: p => p.status === 'Завершён' || p.status === 'Обучение проведено'}
+  ];
+  document.getElementById('alertGrid').innerHTML = zones.map(zone => {
+    const items = projects.filter(zone.filter).slice(0, 4);
+    return `
+      <div class="alert-card">
+        <div class="alert-card-title">${zone.icon} ${zone.title} <span style="color:var(--gray-mid);font-weight:400">(${projects.filter(zone.filter).length})</span></div>
+        ${items.length ? items.map(p => `
+          <div class="alert-item" onclick="openModal(${p.id})">
+            <div class="alert-item-name">${p.name}</div>
+            <div class="alert-item-client">${p.client}</div>
+          </div>`).join('') : '<div style="color:var(--gray-mid);font-size:12px;padding:6px 0">Нет проектов</div>'}
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// KP CONTROL
+// ============================================================
+function renderKPControl() {
+  const t = today();
+  const items = projects.filter(p => !p.hasKP && !DONE_STATUSES.includes(p.status) && p.requestDate);
+  document.getElementById('kpControlBody').innerHTML = items.length
+    ? items.map(p => {
+        const days = daysBetween(p.requestDate, t);
+        const late = days > 3 && !p.kpSentDate;
+        return `<tr ${late ? 'class="row-overdue"' : ''}>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.client}</td>
+          <td>${fmtDate(p.requestDate)}</td>
+          <td ${late ? 'style="color:var(--red);font-weight:700"' : ''}>${days} дн.</td>
+          <td>${p.kpSentDate ? '✅ ' + fmtDate(p.kpSentDate) : '<span style="color:var(--red)">❌ Нет</span>'}</td>
+          <td><span class="badge ${STATUS_COLORS[p.status]||'badge-gray'}">${p.status}</span></td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="6" class="no-data">Все КП отправлены ✓</td></tr>';
+}
+
+// ============================================================
+// PROJECTS TABLE
+// ============================================================
 function populateFilters() {
-  function fillSelect(id, values) {
+  const statuses = [...new Set(projects.map(p => p.status))].filter(Boolean);
+  const stages = [...new Set(projects.map(p => p.funnelStage))].filter(Boolean);
+  const clients = [...new Set(projects.map(p => p.client))].filter(Boolean).sort();
+  const trainersList = [...new Set(projects.map(p => p.trainer))].filter(Boolean).sort();
+  const cities = [...new Set(projects.map(p => p.city))].filter(Boolean).sort();
+  const managers = [...new Set(projects.map(p => p.manager))].filter(Boolean).sort();
+
+  const fill = (id, vals) => {
     const el = document.getElementById(id);
     const cur = el.value;
-    el.innerHTML = '<option value="">Все</option>' + [...new Set(values.filter(Boolean))].sort().map(v => `<option value="${v}">${v}</option>`).join('');
-    el.value = cur;
-  }
-  fillSelect('fStatus', projects.map(p => p.status));
-  fillSelect('fClient', projects.map(p => p.client));
-  fillSelect('fTrainer', projects.map(p => p.trainer));
-  fillSelect('fCity', projects.map(p => p.city));
-  fillSelect('fManager', projects.map(p => p.manager));
+    const first = el.options[0].text;
+    el.innerHTML = `<option value="">${first}</option>` + vals.map(v => `<option value="${v}" ${v===cur?'selected':''}>${v}</option>`).join('');
+  };
+  fill('fStatus', statuses);
+  fill('fFunnel', stages);
+  fill('fClient', clients);
+  fill('fTrainer', trainersList);
+  fill('fCity', cities);
+  fill('fManager', managers);
+
+  // Trainer datalist
+  document.getElementById('trainerList').innerHTML = trainers.map(t => `<option value="${t.name}">`).join('');
 }
 
-// ============================================================
-// FILTERS & TABLE
-// ============================================================
 function applyFilters() {
-  const search = document.getElementById('fSearch').value.toLowerCase();
-  const status = document.getElementById('fStatus').value;
-  const client = document.getElementById('fClient').value;
-  const trainer = document.getElementById('fTrainer').value;
-  const city = document.getElementById('fCity').value;
-  const manager = document.getElementById('fManager').value;
-  const deadline = document.getElementById('fDeadline').value;
+  const search = document.getElementById('fSearch')?.value?.toLowerCase() || '';
+  const status = document.getElementById('fStatus')?.value || '';
+  const funnel = document.getElementById('fFunnel')?.value || '';
+  const client = document.getElementById('fClient')?.value || '';
+  const trainer = document.getElementById('fTrainer')?.value || '';
+  const city = document.getElementById('fCity')?.value || '';
+  const manager = document.getElementById('fManager')?.value || '';
+  const deadline = document.getElementById('fDeadline')?.value || '';
 
   filteredProjects = projects.filter(p => {
+    if (search && !`${p.name} ${p.client} ${p.topic} ${p.trainer} ${p.contact}`.toLowerCase().includes(search)) return false;
     if (status && p.status !== status) return false;
+    if (funnel && p.funnelStage !== funnel) return false;
     if (client && p.client !== client) return false;
     if (trainer && p.trainer !== trainer) return false;
     if (city && p.city !== city) return false;
     if (manager && p.manager !== manager) return false;
     if (deadline && p.deadline && p.deadline > deadline) return false;
-    if (search) {
-      const hay = [p.name, p.client, p.trainer, p.topic, p.contact, p.manager, p.city, p.status, p.comment, p.nextAction].join(' ').toLowerCase();
-      if (!hay.includes(search)) return false;
-    }
     return true;
   });
 
-  // Sort
-  filteredProjects.sort((a, b) => {
-    let av = a[sortField] || '', bv = b[sortField] || '';
-    if (typeof av === 'number') return (av - bv) * sortDir;
-    return av.localeCompare(bv, 'ru') * sortDir;
-  });
+  if (sortKey) {
+    filteredProjects.sort((a,b) => {
+      let av = a[sortKey] || '', bv = b[sortKey] || '';
+      if (typeof av === 'number') return (av - bv) * sortDir;
+      return av.localeCompare(bv) * sortDir;
+    });
+  }
 
   currentPage = 1;
   renderTable();
 }
 
-function clearFilters() {
-  ['fSearch','fDeadline'].forEach(id => document.getElementById(id).value = '');
-  ['fStatus','fClient','fTrainer','fCity','fManager'].forEach(id => document.getElementById(id).value = '');
+function resetFilters() {
+  ['fSearch','fDeadline'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
+  ['fStatus','fFunnel','fClient','fTrainer','fCity','fManager'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
   applyFilters();
 }
 
-function sortTable(field) {
-  if (sortField === field) sortDir *= -1;
-  else { sortField = field; sortDir = 1; }
-  document.querySelectorAll('.sort-arrow').forEach(el => el.textContent = '');
-  const arrow = document.getElementById(`sort-${field}`);
-  if (arrow) arrow.textContent = sortDir === 1 ? ' ▲' : ' ▼';
+function sortBy(key) {
+  if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
   applyFilters();
 }
 
 function renderTable() {
   const start = (currentPage - 1) * PAGE_SIZE;
   const page = filteredProjects.slice(start, start + PAGE_SIZE);
-  const todayStr = today();
-
   document.getElementById('tableCount').textContent = `Показано ${page.length} из ${filteredProjects.length} проектов`;
-
   const tbody = document.getElementById('tableBody');
   if (!page.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="no-data">Нет проектов по выбранным фильтрам</td></tr>';
-    renderPagination();
-    return;
+    tbody.innerHTML = '<tr><td colspan="12" class="no-data">Нет проектов по фильтрам</td></tr>';
+    renderPagination(); return;
   }
-
   tbody.innerHTML = page.map(p => {
     let rowCls = '';
-    if (p.status === 'Завершён') rowCls = 'row-done';
-    else if (p.deadline && isOverdue(p.deadline)) rowCls = 'row-overdue';
-    else if (p.deadline && isSoon(p.deadline)) rowCls = 'row-soon';
-
+    if (DONE_STATUSES.includes(p.status) && p.status === 'Завершён') rowCls = 'row-done';
+    else if (p.deadline && isOverdue(p.deadline) && !DONE_STATUSES.includes(p.status)) rowCls = 'row-overdue';
+    else if (p.deadline && isSoon(p.deadline) && !DONE_STATUSES.includes(p.status)) rowCls = 'row-soon';
     const dlCls = !p.deadline ? '' : isOverdue(p.deadline) ? 'deadline-overdue' : isSoon(p.deadline) ? 'deadline-soon' : 'deadline-ok';
-    const naCls = !p.nextActionDate ? '' : isOverdue(p.nextActionDate) ? 'deadline-overdue' : p.nextActionDate === todayStr ? 'deadline-soon' : '';
-
+    const naCls = !p.nextActionDate ? '' : isOverdue(p.nextActionDate) ? 'deadline-overdue' : p.nextActionDate === today() ? 'deadline-soon' : '';
     const docs = [
-      p.hasProg ? '<span title="Программа" class="check-icon check-yes">📋</span>' : '<span title="Нет программы" class="check-icon check-no">📋</span>',
-      p.hasKP ? '<span title="КП" class="check-icon check-yes">📄</span>' : '<span title="Нет КП" class="check-icon check-no">📄</span>',
-      p.hasContract ? '<span title="Договор" class="check-icon check-yes">📝</span>' : '<span title="Нет договора" class="check-icon check-no">📝</span>',
-      p.hasLMS ? '<span title="LMS" class="check-icon check-yes">🖥</span>' : '<span title="LMS не выдан" class="check-icon check-no">🖥</span>',
+      `<span title="Программа" class="check-icon ${p.hasProg?'check-yes':'check-no'}">📋</span>`,
+      `<span title="КП" class="check-icon ${p.hasKP?'check-yes':'check-no'}">📄</span>`,
+      `<span title="Договор" class="check-icon ${p.hasContract?'check-yes':'check-no'}">📝</span>`,
+      `<span title="LMS" class="check-icon ${p.hasLMS?'check-yes':'check-no'}">🖥</span>`
     ].join(' ');
-
     return `<tr class="${rowCls}">
-      <td><strong>${p.name}</strong><br><small style="color:#6b7280">${p.topic || ''}</small></td>
-      <td>${p.client}<br><small style="color:#6b7280">${p.contact || ''}</small></td>
-      <td><small>${p.topic || '—'}</small></td>
-      <td>${p.trainer || '—'}</td>
-      <td><span class="badge ${STATUS_COLORS[p.status] || 'badge-gray'}">${p.status}</span><br><span class="badge ${PRIORITY_COLORS[p.priority] || 'badge-gray'}" style="margin-top:3px">${p.priority}</span></td>
+      <td><strong style="cursor:pointer" onclick="openModal(${p.id})">${p.name}</strong><br><small style="color:var(--gray-mid)">${p.topic||''}</small></td>
+      <td><span style="cursor:pointer;color:var(--blue-mid);text-decoration:underline" onclick="openClientModal('${p.client.replace(/'/g,"\\'")}')"><strong>${p.client}</strong></span><br><small style="color:var(--gray-mid)">${p.contact||''}</small></td>
+      <td><small>${p.funnelStage||'—'}</small></td>
+      <td>${p.trainer||'—'}</td>
+      <td><span class="badge ${STATUS_COLORS[p.status]||'badge-gray'}">${p.status}</span></td>
+      <td>${p.probability||'—'}%</td>
       <td class="${dlCls}">${fmtDate(p.deadline)}</td>
-      <td>${p.kpAmount ? fmtMoney(p.kpAmount) : '—'}<br><small style="color:#16a34a">${p.margin != null ? 'Маржа: ' + fmtMoney(p.margin) : ''}</small></td>
+      <td>${p.kpAmount ? fmtMoney(p.kpAmount) : '—'}</td>
       <td>${docs}</td>
       <td class="${naCls}">${p.nextAction ? `<strong>${p.nextAction}</strong><br><small>${fmtDate(p.nextActionDate)}</small>` : '—'}</td>
-      <td>${p.manager || '—'}</td>
+      <td>${p.manager||'—'}</td>
       <td>
-        <div class="table-actions">
-          <button class="icon-btn" title="Редактировать" onclick="openModal(${p.id})">✏️</button>
-          <button class="icon-btn" title="Удалить" onclick="deleteProject(${p.id})">🗑️</button>
-        </div>
+        <button class="icon-btn" title="Редактировать" onclick="openModal(${p.id})">✏️</button>
+        <button class="icon-btn" title="Удалить" onclick="deleteProject(${p.id})">🗑️</button>
       </td>
     </tr>`;
   }).join('');
-
   renderPagination();
 }
 
 function renderPagination() {
-  const total = filteredProjects.length;
-  const pages = Math.ceil(total / PAGE_SIZE);
+  const pages = Math.ceil(filteredProjects.length / PAGE_SIZE);
   const el = document.getElementById('pagination');
   if (pages <= 1) { el.innerHTML = ''; return; }
   let html = `<span class="page-info">Стр. ${currentPage} из ${pages}</span>`;
-  for (let i = 1; i <= pages; i++) {
-    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
-  }
+  for (let i = 1; i <= pages; i++) html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
   el.innerHTML = html;
 }
-
 function goPage(n) { currentPage = n; renderTable(); }
 
+
 // ============================================================
-// MODAL
+// PROJECT MODAL
 // ============================================================
 function openModal(id) {
   editingId = id || null;
@@ -976,151 +1283,566 @@ function openModal(id) {
   clearForm();
   if (id) {
     const p = projects.find(x => x.id === id);
-    if (p) fillForm(p);
+    if (p) { fillForm(p); renderHistory(p.history || []); }
+  } else {
+    renderHistory([]);
+    document.getElementById('f_requestDate').value = today();
   }
   calcMargin();
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
-
 function closeModal() {
   document.getElementById('modalOverlay').classList.add('hidden');
   editingId = null;
 }
-
 function clearForm() {
-  ['f_name','f_client','f_contact','f_phone','f_email','f_topic','f_city','f_trainer','f_stage','f_manager','f_comment','f_nextAction','f_link'].forEach(id => document.getElementById(id).value = '');
-  ['f_participants','f_kpAmount','f_trainerCost'].forEach(id => document.getElementById(id).value = '');
-  ['f_requestDate','f_deadline','f_kpDate','f_nextActionDate'].forEach(id => document.getElementById(id).value = '');
-  ['f_format','f_language','f_source','f_payStatus'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f_status').value = 'Новая заявка';
-  document.getElementById('f_priority').value = 'Средний';
-  document.getElementById('f_vat').value = '0';
-  ['f_hasProg','f_hasKP','f_hasContract','f_hasRequest','f_hasLMS'].forEach(id => document.getElementById(id).checked = false);
-  document.getElementById('marginCalc').innerHTML = '';
+  const ids = ['f_name','f_client','f_contact','f_phone','f_email','f_topic','f_city','f_trainer',
+    'f_stage','f_manager','f_comment','f_nextAction','f_bitrixLink','f_documentologLink',
+    'f_folderLink','f_kpFileLink','f_contractLink'];
+  ids.forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
+  ['f_participants','f_kpAmount','f_trainerCost','f_contractAmount'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
+  ['f_requestDate','f_deadline','f_kpDate','f_nextActionDate'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
+  const fs = document.getElementById('f_status'); if(fs) fs.value = 'Новая заявка';
+  const fp = document.getElementById('f_priority'); if(fp) fp.value = 'Средний';
+  const fv = document.getElementById('f_vat'); if(fv) fv.value = '0';
+  const ff = document.getElementById('f_funnelStage'); if(ff) ff.value = 'Новый лид';
+  const fpr = document.getElementById('f_probability'); if(fpr) fpr.value = '25';
+  ['f_hasProg','f_hasKP','f_hasContract','f_hasRequest','f_hasLMS'].forEach(id => { const e = document.getElementById(id); if(e) e.checked = false; });
+  const mc = document.getElementById('marginCalc'); if(mc) mc.innerHTML = '';
 }
-
 function fillForm(p) {
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
   const setCb = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-  set('f_name', p.name); set('f_client', p.client); set('f_contact', p.contact);
-  set('f_phone', p.phone); set('f_email', p.email); set('f_topic', p.topic);
-  set('f_format', p.format); set('f_city', p.city); set('f_participants', p.participants);
-  set('f_language', p.language); set('f_trainer', p.trainer); set('f_status', p.status);
-  set('f_stage', p.stage); set('f_priority', p.priority); set('f_manager', p.manager);
-  set('f_requestDate', p.requestDate); set('f_deadline', p.deadline);
-  set('f_nextAction', p.nextAction); set('f_nextActionDate', p.nextActionDate);
-  set('f_comment', p.comment); set('f_link', p.link); set('f_source', p.source);
-  set('f_kpDate', p.kpDate); set('f_kpAmount', p.kpAmount || ''); set('f_trainerCost', p.trainerCost || '');
-  set('f_vat', p.vat || '0'); set('f_payStatus', p.payStatus || '');
-  setCb('f_hasProg', p.hasProg); setCb('f_hasKP', p.hasKP); setCb('f_hasContract', p.hasContract);
-  setCb('f_hasRequest', p.hasRequest); setCb('f_hasLMS', p.hasLMS);
+  set('f_name',p.name); set('f_client',p.client); set('f_contact',p.contact);
+  set('f_phone',p.phone); set('f_email',p.email); set('f_topic',p.topic);
+  set('f_format',p.format); set('f_city',p.city); set('f_participants',p.participants);
+  set('f_language',p.language); set('f_trainer',p.trainer); set('f_status',p.status);
+  set('f_funnelStage',p.funnelStage); set('f_stage',p.stage); set('f_priority',p.priority);
+  set('f_probability',p.probability||'25'); set('f_manager',p.manager);
+  set('f_requestDate',p.requestDate); set('f_deadline',p.deadline);
+  set('f_nextAction',p.nextAction); set('f_nextActionDate',p.nextActionDate);
+  set('f_comment',p.comment); set('f_source',p.source);
+  set('f_kpDate',p.kpDate); set('f_kpAmount',p.kpAmount||''); set('f_trainerCost',p.trainerCost||'');
+  set('f_vat',p.vat||'0'); set('f_contractAmount',p.contractAmount||''); set('f_payStatus',p.payStatus||'');
+  set('f_bitrixLink',p.bitrixLink||''); set('f_documentologLink',p.documentologLink||'');
+  set('f_folderLink',p.folderLink||''); set('f_kpFileLink',p.kpFileLink||'');
+  set('f_contractLink',p.contractLink||'');
+  setCb('f_hasProg',p.hasProg); setCb('f_hasKP',p.hasKP); setCb('f_hasContract',p.hasContract);
+  setCb('f_hasRequest',p.hasRequest); setCb('f_hasLMS',p.hasLMS);
 }
-
 function getFormData() {
   const g = id => document.getElementById(id)?.value || '';
   const gc = id => document.getElementById(id)?.checked || false;
   const gn = id => parseFloat(document.getElementById(id)?.value) || 0;
   return {
-    name: g('f_name'), client: g('f_client'), contact: g('f_contact'), phone: g('f_phone'),
-    email: g('f_email'), topic: g('f_topic'), format: g('f_format'), city: g('f_city'),
-    participants: gn('f_participants'), language: g('f_language'), trainer: g('f_trainer'),
-    status: g('f_status'), stage: g('f_stage'), priority: g('f_priority'), manager: g('f_manager'),
-    requestDate: g('f_requestDate'), deadline: g('f_deadline'), kpDate: g('f_kpDate'),
-    kpAmount: gn('f_kpAmount'), trainerCost: gn('f_trainerCost'), vat: parseInt(g('f_vat')) || 0,
-    payStatus: g('f_payStatus'), source: g('f_source'), comment: g('f_comment'), link: g('f_link'),
-    nextAction: g('f_nextAction'), nextActionDate: g('f_nextActionDate'),
-    hasProg: gc('f_hasProg'), hasKP: gc('f_hasKP'), hasContract: gc('f_hasContract'),
-    hasRequest: gc('f_hasRequest'), hasLMS: gc('f_hasLMS')
+    name:g('f_name'), client:g('f_client'), contact:g('f_contact'), phone:g('f_phone'),
+    email:g('f_email'), topic:g('f_topic'), format:g('f_format'), city:g('f_city'),
+    participants:gn('f_participants'), language:g('f_language'), trainer:g('f_trainer'),
+    status:g('f_status'), funnelStage:g('f_funnelStage'), stage:g('f_stage'),
+    priority:g('f_priority'), probability:parseInt(g('f_probability'))||25,
+    manager:g('f_manager'), requestDate:g('f_requestDate'), deadline:g('f_deadline'),
+    kpDate:g('f_kpDate'), kpAmount:gn('f_kpAmount'), trainerCost:gn('f_trainerCost'),
+    vat:parseInt(g('f_vat'))||0, contractAmount:gn('f_contractAmount'), payStatus:g('f_payStatus'),
+    source:g('f_source'), comment:g('f_comment'),
+    nextAction:g('f_nextAction'), nextActionDate:g('f_nextActionDate'),
+    hasProg:gc('f_hasProg'), hasKP:gc('f_hasKP'), hasContract:gc('f_hasContract'),
+    hasRequest:gc('f_hasRequest'), hasLMS:gc('f_hasLMS'),
+    bitrixLink:g('f_bitrixLink'), documentologLink:g('f_documentologLink'),
+    folderLink:g('f_folderLink'), kpFileLink:g('f_kpFileLink'), contractLink:g('f_contractLink')
   };
 }
-
 function saveProject() {
   const data = getFormData();
   if (!data.name.trim()) { showToast('Введите название проекта', 'error'); return; }
   if (!data.client.trim()) { showToast('Введите заказчика', 'error'); return; }
   data.margin = calcProjectMargin(data);
+  const now = new Date().toISOString().slice(0,10);
   if (editingId) {
     const idx = projects.findIndex(p => p.id === editingId);
-    if (idx >= 0) projects[idx] = { ...projects[idx], ...data };
+    if (idx >= 0) {
+      const history = [...(projects[idx].history||[]), {date:now, user:data.manager||'Менеджер', action:'Обновлён', comment:''}];
+      projects[idx] = {...projects[idx], ...data, history};
+    }
     showToast('Проект обновлён', 'success');
   } else {
     data.id = Date.now();
+    data.history = [{date:now, user:data.manager||'Менеджер', action:'Создан', comment:'Новый проект'}];
     projects.push(data);
     showToast('Проект добавлен', 'success');
   }
-  save();
-  closeModal();
-  render();
+  save(); closeModal(); render();
 }
-
 function deleteProject(id) {
   const p = projects.find(x => x.id === id);
   confirmAction(`Удалить проект «${p?.name}»?`, () => {
     projects = projects.filter(x => x.id !== id);
-    save();
-    render();
-    showToast('Проект удалён');
+    save(); render(); showToast('Проект удалён');
   });
 }
-
-// Margin calc in modal
 function calcMargin() {
-  const kp = parseFloat(document.getElementById('f_kpAmount')?.value) || 0;
-  const cost = parseFloat(document.getElementById('f_trainerCost')?.value) || 0;
-  const vat = parseInt(document.getElementById('f_vat')?.value) || 0;
+  const kp = parseFloat(document.getElementById('f_kpAmount')?.value)||0;
+  const cost = parseFloat(document.getElementById('f_trainerCost')?.value)||0;
+  const vat = parseInt(document.getElementById('f_vat')?.value)||0;
   const el = document.getElementById('marginCalc');
   if (!kp) { el.innerHTML = ''; return; }
-  const vatAmt = kp * (vat / (100 + vat));
+  const vatAmt = kp * (vat/(100+vat));
   const revenue = kp - vatAmt;
   const margin = revenue - cost;
-  const pct = revenue > 0 ? ((margin / revenue) * 100).toFixed(1) : 0;
-  el.innerHTML = `Выручка (без НДС): <strong>${fmtMoney(Math.round(revenue))}</strong> &nbsp;|&nbsp; НДС: <strong>${fmtMoney(Math.round(vatAmt))}</strong> &nbsp;|&nbsp; Маржа: <strong style="color:${margin >= 0 ? '#16a34a' : '#dc2626'}">${fmtMoney(Math.round(margin))} (${pct}%)</strong>`;
+  const pct = revenue > 0 ? ((margin/revenue)*100).toFixed(1) : 0;
+  el.innerHTML = `Выручка (без НДС): <strong>${fmtMoney(Math.round(revenue))}</strong> &nbsp;|&nbsp; НДС: <strong>${fmtMoney(Math.round(vatAmt))}</strong> &nbsp;|&nbsp; Маржа: <strong style="color:${margin>=0?'#16a34a':'#dc2626'}">${fmtMoney(Math.round(margin))} (${pct}%)</strong>`;
+}
+function renderHistory(history) {
+  const el = document.getElementById('projectHistory');
+  if (!history || !history.length) {
+    el.innerHTML = '<div style="color:var(--gray-mid);font-size:13px">Нет истории изменений</div>'; return;
+  }
+  el.innerHTML = [...history].reverse().map(h => `
+    <div class="history-item">
+      <div class="history-dot"></div>
+      <div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="history-action">${h.action}</span>
+          <span class="history-date">${fmtDate(h.date)}</span>
+          <span style="font-size:12px;color:var(--gray-mid)">${h.user||''}</span>
+        </div>
+        ${h.comment ? `<div class="history-comment">${h.comment}</div>` : ''}
+      </div>
+    </div>`).join('');
 }
 
 // ============================================================
-// CONFIRM / RESET
+// CLIENT MODAL
 // ============================================================
-function confirmReset() {
-  confirmAction('Сбросить все данные и загрузить тестовые примеры?', () => {
-    projects = DEFAULT_DATA.map(p => ({ ...p, margin: calcProjectMargin(p) }));
-    save();
-    render();
-    showToast('Данные сброшены');
+function openClientModal(clientName) {
+  const clientProjects = projects.filter(p => p.client === clientName);
+  const first = clientProjects[0] || {};
+  const totalKP = clientProjects.reduce((s,p) => s + (parseFloat(p.kpAmount)||0), 0);
+  const totalContract = clientProjects.reduce((s,p) => s + (parseFloat(p.contractAmount)||0), 0);
+  const lastActivity = clientProjects.flatMap(p => p.history||[]).map(h => h.date).sort().reverse()[0];
+  const allHistory = clientProjects.flatMap(p => (p.history||[]).map(h => ({...h, project:p.name}))).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 8);
+
+  document.getElementById('clientModalTitle').textContent = clientName;
+  document.getElementById('clientModalBody').innerHTML = `
+    <div style="margin-bottom:14px">
+      <div style="font-size:18px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${clientName}</div>
+      <div style="color:var(--gray-mid);font-size:13px">
+        ${first.contact ? '👤 ' + first.contact : ''}
+        ${first.phone ? ' · <a href="tel:'+first.phone+'">📞 '+first.phone+'</a>' : ''}
+        ${first.email ? ' · <a href="mailto:'+first.email+'">✉️ '+first.email+'</a>' : ''}
+      </div>
+    </div>
+    <div class="client-stats">
+      <div class="client-stat"><div class="client-stat-val">${clientProjects.length}</div><div class="client-stat-lbl">Проектов</div></div>
+      <div class="client-stat"><div class="client-stat-val" style="font-size:14px">${fmtMoney(totalKP)}</div><div class="client-stat-lbl">Сумма КП</div></div>
+      <div class="client-stat"><div class="client-stat-val" style="font-size:14px">${fmtMoney(totalContract)}</div><div class="client-stat-lbl">Договоров</div></div>
+      <div class="client-stat"><div class="client-stat-val" style="font-size:13px">${fmtDate(lastActivity)}</div><div class="client-stat-lbl">Посл. активность</div></div>
+    </div>
+    <div style="font-weight:700;color:var(--blue-dark);margin-bottom:8px">Проекты</div>
+    <div class="tbl-wrap" style="margin-bottom:16px">
+      <table>
+        <thead><tr><th>Проект</th><th>Статус</th><th>Дедлайн</th><th>Сумма КП</th></tr></thead>
+        <tbody>
+          ${clientProjects.map(p => `<tr>
+            <td><span style="cursor:pointer;color:var(--blue-mid)" onclick="closeClientModal();openModal(${p.id})">${p.name}</span></td>
+            <td><span class="badge ${STATUS_COLORS[p.status]||'badge-gray'}">${p.status}</span></td>
+            <td>${fmtDate(p.deadline)}</td>
+            <td>${fmtMoney(p.kpAmount)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${allHistory.length ? `
+    <div style="font-weight:700;color:var(--blue-dark);margin-bottom:8px">История активности</div>
+    <div class="history-list">
+      ${allHistory.map(h => `
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="history-action">${h.action}</span>
+              <span class="history-date">${fmtDate(h.date)}</span>
+              <span style="font-size:12px;color:var(--gray-mid)">${h.project}</span>
+            </div>
+            ${h.comment ? `<div class="history-comment">${h.comment}</div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>` : ''}`;
+  document.getElementById('clientModalOverlay').classList.remove('hidden');
+}
+function closeClientModal() { document.getElementById('clientModalOverlay').classList.add('hidden'); }
+
+// ============================================================
+// TRAINERS
+// ============================================================
+function renderTrainers() {
+  const tbody = document.getElementById('trainersBody');
+  tbody.innerHTML = trainers.map(t => {
+    const fmt = [t.isOnline?'Онлайн':'', t.isOffline?'Очно':''].filter(Boolean).join('/');
+    return `<tr>
+      <td><strong>${t.name}</strong></td>
+      <td style="max-width:200px">${t.topics}</td>
+      <td>${fmtMoney(t.costPerDay)}<small>/день</small></td>
+      <td>${t.city}</td>
+      <td>${fmt||'—'}</td>
+      <td><a href="tel:${t.phone}">${t.phone}</a></td>
+      <td><a href="mailto:${t.email}">${t.email}</a></td>
+      <td>${starsHtml(t.rating)}</td>
+      <td style="max-width:160px;font-size:12px">${t.lastProject||'—'}</td>
+      <td>
+        <button class="icon-btn" onclick="openTrainerModal(${t.id})">✏️</button>
+        <button class="icon-btn" onclick="deleteTrainer(${t.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" class="no-data">Нет тренеров</td></tr>';
+}
+function openTrainerModal(id) {
+  editingTrainerId = id;
+  document.getElementById('trainerModalTitle').textContent = id ? 'Редактировать тренера' : 'Добавить тренера';
+  const t = id ? trainers.find(x => x.id === id) : null;
+  ['t_name','t_topics','t_city','t_phone','t_email','t_lastProject','t_notes'].forEach(fid => {
+    const key = fid.replace('t_','');
+    document.getElementById(fid).value = t ? (t[key]||'') : '';
+  });
+  document.getElementById('t_costPerDay').value = t ? t.costPerDay||'' : '';
+  document.getElementById('t_rating').value = t ? t.rating||'' : '';
+  document.getElementById('t_isOnline').checked = t ? !!t.isOnline : false;
+  document.getElementById('t_isOffline').checked = t ? !!t.isOffline : false;
+  document.getElementById('trainerModalOverlay').classList.remove('hidden');
+}
+function closeTrainerModal() { document.getElementById('trainerModalOverlay').classList.add('hidden'); editingTrainerId = null; }
+function saveTrainer() {
+  const g = id => document.getElementById(id)?.value||'';
+  const data = {
+    name:g('t_name'), topics:g('t_topics'), costPerDay:parseFloat(g('t_costPerDay'))||0,
+    city:g('t_city'), phone:g('t_phone'), email:g('t_email'),
+    rating:parseFloat(g('t_rating'))||0, lastProject:g('t_lastProject'), notes:g('t_notes'),
+    isOnline:document.getElementById('t_isOnline').checked,
+    isOffline:document.getElementById('t_isOffline').checked
+  };
+  if (!data.name.trim()) { showToast('Введите ФИО тренера', 'error'); return; }
+  if (editingTrainerId) {
+    const idx = trainers.findIndex(t => t.id === editingTrainerId);
+    if (idx >= 0) trainers[idx] = {...trainers[idx], ...data};
+    showToast('Тренер обновлён', 'success');
+  } else {
+    data.id = Date.now();
+    trainers.push(data);
+    showToast('Тренер добавлен', 'success');
+  }
+  save(); closeTrainerModal(); renderTrainers();
+}
+function deleteTrainer(id) {
+  const t = trainers.find(x => x.id === id);
+  confirmAction(`Удалить тренера «${t?.name}»?`, () => {
+    trainers = trainers.filter(x => x.id !== id);
+    save(); renderTrainers(); showToast('Тренер удалён');
   });
 }
 
-function confirmAction(text, cb) {
-  document.getElementById('confirmText').textContent = text;
-  document.getElementById('confirmOkBtn').onclick = () => { cb(); closeConfirm(); };
-  document.getElementById('confirmOverlay').classList.remove('hidden');
+// ============================================================
+// LMS
+// ============================================================
+function renderLms() {
+  const total = lmsData.reduce((s,l) => s + (l.totalParticipants||0), 0);
+  const completed = lmsData.reduce((s,l) => s + (l.completed||0), 0);
+  const notCompleted = lmsData.reduce((s,l) => s + (l.notCompleted||0), 0);
+  const accessOpen = lmsData.filter(l => l.accessOpen).length;
+  const certsSent = lmsData.filter(l => l.certsSent).length;
+  document.getElementById('lmsKpi').innerHTML = [
+    {label:'Всего групп', val:lmsData.length},
+    {label:'Участников', val:total},
+    {label:'Доступ открыт', val:accessOpen},
+    {label:'Прошли', val:completed, cls:'green'},
+    {label:'Не прошли', val:notCompleted, cls:'red'},
+    {label:'Серт. выданы', val:certsSent}
+  ].map(k => `<div class="kpi-card ${k.cls||''}"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls||''}">${k.val}</div></div>`).join('');
+
+  const tbody = document.getElementById('lmsBody');
+  tbody.innerHTML = lmsData.map(l => `<tr>
+    <td><strong>${l.company}</strong></td>
+    <td>${l.project}</td>
+    <td>${l.totalParticipants}</td>
+    <td>${l.listsReceived ? '✅' : '❌'}</td>
+    <td>${l.accessOpen ? '✅' : '❌'}</td>
+    <td>${fmtDate(l.accessDate)}</td>
+    <td>${l.completed}</td>
+    <td>${l.notCompleted}</td>
+    <td>${l.certsSent ? '✅' : '❌'}</td>
+    <td>
+      <button class="icon-btn" onclick="openLmsModal(${l.id})">✏️</button>
+      <button class="icon-btn" onclick="deleteLms(${l.id})">🗑️</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="10" class="no-data">Нет записей</td></tr>';
+}
+function openLmsModal(id) {
+  editingLmsId = id;
+  document.getElementById('lmsModalTitle').textContent = id ? 'Редактировать LMS' : 'Добавить LMS';
+  const l = id ? lmsData.find(x => x.id === id) : null;
+  document.getElementById('l_company').value = l ? l.company||'' : '';
+  document.getElementById('l_project').value = l ? l.project||'' : '';
+  document.getElementById('l_totalParticipants').value = l ? l.totalParticipants||'' : '';
+  document.getElementById('l_completed').value = l ? l.completed||'' : '';
+  document.getElementById('l_notCompleted').value = l ? l.notCompleted||'' : '';
+  document.getElementById('l_accessDate').value = l ? l.accessDate||'' : '';
+  document.getElementById('l_listsReceived').checked = l ? !!l.listsReceived : false;
+  document.getElementById('l_accessOpen').checked = l ? !!l.accessOpen : false;
+  document.getElementById('l_certsSent').checked = l ? !!l.certsSent : false;
+  document.getElementById('lmsModalOverlay').classList.remove('hidden');
+}
+function closeLmsModal() { document.getElementById('lmsModalOverlay').classList.add('hidden'); editingLmsId = null; }
+function saveLms() {
+  const g = id => document.getElementById(id)?.value||'';
+  const data = {
+    company:g('l_company'), project:g('l_project'),
+    totalParticipants:parseInt(g('l_totalParticipants'))||0,
+    completed:parseInt(g('l_completed'))||0, notCompleted:parseInt(g('l_notCompleted'))||0,
+    accessDate:g('l_accessDate'),
+    listsReceived:document.getElementById('l_listsReceived').checked,
+    accessOpen:document.getElementById('l_accessOpen').checked,
+    certsSent:document.getElementById('l_certsSent').checked
+  };
+  if (!data.company.trim()) { showToast('Введите компанию', 'error'); return; }
+  if (editingLmsId) {
+    const idx = lmsData.findIndex(l => l.id === editingLmsId);
+    if (idx >= 0) lmsData[idx] = {...lmsData[idx], ...data};
+    showToast('Запись обновлена', 'success');
+  } else {
+    data.id = Date.now();
+    lmsData.push(data);
+    showToast('Запись добавлена', 'success');
+  }
+  save(); closeLmsModal(); renderLms();
+}
+function deleteLms(id) {
+  confirmAction('Удалить запись LMS?', () => {
+    lmsData = lmsData.filter(x => x.id !== id);
+    save(); renderLms(); showToast('Запись удалена');
+  });
 }
 
-function closeConfirm() {
-  document.getElementById('confirmOverlay').classList.add('hidden');
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function initCalendar() {
+  const d = new Date();
+  calYear = d.getFullYear();
+  calMonth = d.getMonth();
+}
+function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+function renderCalendar() {
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const DAYS = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  document.getElementById('calTitle').textContent = MONTHS[calMonth] + ' ' + calYear;
+
+  const todayStr = today();
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay = new Date(calYear, calMonth + 1, 0);
+  let startDow = firstDay.getDay(); // 0=sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // convert to mon=0
+
+  // Build event map
+  const eventMap = {};
+  projects.forEach(p => {
+    const add = (date, type, color, label) => {
+      if (!date) return;
+      if (!eventMap[date]) eventMap[date] = [];
+      eventMap[date].push({type, color, label, id: p.id});
+    };
+    if (p.deadline && !DONE_STATUSES.includes(p.status)) add(p.deadline, 'deadline', '#dc2626', 'Дедлайн: ' + p.name);
+    if (p.nextActionDate && !DONE_STATUSES.includes(p.status)) add(p.nextActionDate, 'action', '#2563a8', 'Действие: ' + p.name);
+    if (p.deadline && ['В работе','Обучение проведено'].includes(p.status)) add(p.deadline, 'training', '#16a34a', 'Обучение: ' + p.name);
+    if (p.deadline && p.status === 'Договор оформляется') add(p.deadline, 'contract', '#d97706', 'Договор: ' + p.name);
+  });
+
+  let html = DAYS.map(d => `<div class="cal-header">${d}</div>`).join('');
+  // empty cells before
+  for (let i = 0; i < startDow; i++) html += `<div class="cal-day other-month"></div>`;
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const events = eventMap[dateStr] || [];
+    const dots = [...new Set(events.map(e => e.color))].map(c => `<span class="cal-dot" style="background:${c}"></span>`).join('');
+    html += `<div class="cal-day ${isToday?'today':''}" onclick="showCalDay('${dateStr}')">
+      <div class="cal-day-num">${day}</div>
+      <div>${dots}</div>
+      ${events.length > 2 ? `<div style="font-size:10px;color:var(--gray-mid)">${events.length} событий</div>` : ''}
+    </div>`;
+  }
+  // fill remaining
+  const total = startDow + lastDay.getDate();
+  const rem = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let i = 0; i < rem; i++) html += `<div class="cal-day other-month"></div>`;
+
+  document.getElementById('calGrid').innerHTML = html;
+  document.getElementById('calPopup').classList.remove('open');
+}
+
+function showCalDay(dateStr) {
+  const events = [];
+  projects.forEach(p => {
+    if (p.deadline === dateStr) events.push({label:`🔴 Дедлайн: <strong>${p.name}</strong> (${p.client})`, id:p.id});
+    if (p.nextActionDate === dateStr) events.push({label:`🔵 Действие: ${p.nextAction||p.name} · <strong>${p.client}</strong>`, id:p.id});
+    if (p.deadline === dateStr && ['В работе','Обучение проведено'].includes(p.status)) events.push({label:`🟢 Обучение: <strong>${p.name}</strong>`, id:p.id});
+    if (p.deadline === dateStr && p.status === 'Договор оформляется') events.push({label:`🟡 Договор: <strong>${p.name}</strong>`, id:p.id});
+  });
+  const popup = document.getElementById('calPopup');
+  if (!events.length) {
+    popup.innerHTML = `<div style="color:var(--gray-mid)">Событий нет</div>`;
+  } else {
+    popup.innerHTML = `<div style="font-weight:700;margin-bottom:8px;color:var(--blue-dark)">${fmtDate(dateStr)}</div>` +
+      events.map(e => `<div style="padding:6px 0;border-bottom:1px solid var(--gray-border);cursor:pointer" onclick="openModal(${e.id})">${e.label}</div>`).join('');
+  }
+  popup.classList.add('open');
 }
 
 // ============================================================
-// TOAST
+// ANALYTICS
 // ============================================================
-function showToast(msg, type = '') {
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.textContent = msg;
-  document.getElementById('toastContainer').appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+function renderAnalytics() {
+  const t = today();
+  const kpSent = projects.filter(p => p.kpSentDate).reduce((s,p) => s + (parseFloat(p.kpAmount)||0), 0);
+  const contractSum = projects.reduce((s,p) => s + (parseFloat(p.contractAmount)||0), 0);
+  const conducted = projects.filter(p => ['Завершён','Обучение проведено'].includes(p.status)).length;
+  const forecast = projects.filter(p => !DONE_STATUSES.includes(p.status))
+    .reduce((s,p) => s + (parseFloat(p.kpAmount)||0) * ((parseFloat(p.probability)||0)/100), 0);
+  const lost = projects.filter(p => ['Отказ','Проиграно'].includes(p.status))
+    .reduce((s,p) => s + (parseFloat(p.kpAmount)||0), 0);
+  const kpAmounts = projects.map(p => parseFloat(p.kpAmount)||0).filter(v => v > 0);
+  const avgKP = kpAmounts.length ? kpAmounts.reduce((a,b) => a+b, 0) / kpAmounts.length : 0;
+
+  document.getElementById('analyticsKpi').innerHTML = [
+    {label:'Сумма отправленных КП', val:fmtMoney(kpSent), cls:'green'},
+    {label:'Подписано договоров', val:fmtMoney(contractSum), cls:'green'},
+    {label:'Проведено обучений', val:conducted, cls:''},
+    {label:'Прогноз выручки', val:fmtMoney(Math.round(forecast)), cls:'orange'},
+    {label:'Потеряно сделок', val:fmtMoney(lost), cls:'red'},
+    {label:'Средний чек', val:fmtMoney(Math.round(avgKP)), cls:''}
+  ].map(k => `<div class="kpi-card ${k.cls}"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls}" style="font-size:16px">${k.val}</div></div>`).join('');
+
+  renderCharts();
+  renderFunnelConversion();
+  renderManagerPipeline();
+}
+
+function renderCharts() {
+  // Status doughnut
+  const statusCounts = {};
+  STATUSES.forEach(s => statusCounts[s] = 0);
+  projects.forEach(p => { if (statusCounts[p.status] !== undefined) statusCounts[p.status]++; });
+  const statusLabels = Object.keys(statusCounts).filter(k => statusCounts[k] > 0);
+  const statusData = statusLabels.map(k => statusCounts[k]);
+  const statusColors = ['#2563a8','#3b82d4','#60a5fa','#d97706','#ea580c','#f97316','#16a34a','#22c55e','#dc2626','#ef4444','#6b7280'];
+
+  if (chartStatus) chartStatus.destroy();
+  chartStatus = new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: { labels: statusLabels, datasets: [{ data: statusData, backgroundColor: statusColors.slice(0, statusLabels.length), borderWidth: 2 }] },
+    options: { responsive: true, plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } } }
+  });
+
+  // KP bar chart top 8
+  const kpProjects = [...projects].filter(p => p.kpAmount > 0).sort((a,b) => b.kpAmount - a.kpAmount).slice(0, 8);
+  if (chartKP) chartKP.destroy();
+  chartKP = new Chart(document.getElementById('chartKP'), {
+    type: 'bar',
+    data: {
+      labels: kpProjects.map(p => p.name.length > 20 ? p.name.slice(0,20)+'…' : p.name),
+      datasets: [{ label: 'Сумма КП (₸)', data: kpProjects.map(p => p.kpAmount), backgroundColor: '#2563a8' }]
+    },
+    options: {
+      responsive: true, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { callback: v => (v/1000000).toFixed(1) + 'M' } } }
+    }
+  });
+
+  // Monthly line
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ label: d.toLocaleString('ru', {month:'short', year:'2-digit'}), key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` });
+  }
+  const monthlyCounts = months.map(m => projects.filter(p => p.requestDate && p.requestDate.startsWith(m.key)).length);
+  if (chartMonthly) chartMonthly.destroy();
+  chartMonthly = new Chart(document.getElementById('chartMonthly'), {
+    type: 'line',
+    data: {
+      labels: months.map(m => m.label),
+      datasets: [{ label: 'Новых проектов', data: monthlyCounts, borderColor: '#2563a8', backgroundColor: 'rgba(37,99,168,0.1)', tension: 0.4, fill: true }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+}
+
+function renderFunnelConversion() {
+  const total = projects.length || 1;
+  let prev = null;
+  document.getElementById('funnelConvBody').innerHTML = FUNNEL_STAGES.map(stage => {
+    const count = projects.filter(p => p.funnelStage === stage).length;
+    const fromPrev = prev !== null && prev > 0 ? Math.round((count/prev)*100) + '%' : '—';
+    const fromTotal = Math.round((count/total)*100) + '%';
+    if (stage !== 'Проиграно') prev = count;
+    return `<tr><td>${stage}</td><td>${count}</td><td>${fromPrev}</td><td>${fromTotal}</td></tr>`;
+  }).join('');
+}
+
+function renderManagerPipeline() {
+  const managers = [...new Set(projects.map(p => p.manager).filter(Boolean))];
+  document.getElementById('managerPipeBody').innerHTML = managers.map(mgr => {
+    const mps = projects.filter(p => p.manager === mgr);
+    const kpSum = mps.reduce((s,p) => s + (parseFloat(p.kpAmount)||0), 0);
+    const forecast = mps.filter(p => !DONE_STATUSES.includes(p.status))
+      .reduce((s,p) => s + (parseFloat(p.kpAmount)||0) * ((parseFloat(p.probability)||0)/100), 0);
+    return `<tr><td>${mgr}</td><td>${mps.length}</td><td>${fmtMoney(kpSum)}</td><td>${fmtMoney(Math.round(forecast))}</td></tr>`;
+  }).join('') || '<tr><td colspan="4" class="no-data">Нет данных</td></tr>';
 }
 
 // ============================================================
-// EXPORT EXCEL (CSV)
+// TEMPLATES
+// ============================================================
+function renderTemplates() {
+  document.getElementById('tmplGrid').innerHTML = TEMPLATES.map((t, i) => `
+    <div class="tmpl-card">
+      <div class="tmpl-card-title">${t.name}</div>
+      <pre class="tmpl-text" id="tmpl-${i}">${t.text}</pre>
+      <button class="btn btn-primary btn-sm" onclick="copyTemplate(${i})">📋 Копировать</button>
+      <span id="tmplFeedback-${i}" style="font-size:12px;color:var(--green);margin-left:8px;display:none">Скопировано!</span>
+    </div>`).join('');
+}
+
+function copyTemplate(i) {
+  const text = TEMPLATES[i].text;
+  navigator.clipboard.writeText(text).then(() => {
+    const fb = document.getElementById('tmplFeedback-' + i);
+    fb.style.display = 'inline';
+    setTimeout(() => { fb.style.display = 'none'; }, 2000);
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Скопировано!', 'success');
+  });
+}
+
+// ============================================================
+// EXCEL EXPORT
 // ============================================================
 function exportExcel() {
-  const cols = ['ID','Проект','Заказчик','Контакт','Телефон','Email','Тема','Формат','Город','Участников','Язык','Тренер','Статус','Этап','Приоритет','Дедлайн','Дата запроса','Дата КП','Сумма КП','Расходы тренер','НДС%','Маржа','Статус оплаты','Источник','Менеджер','Программа','КП','Договор','Заявка','LMS','Следующее действие','Дата след.действия','Комментарий','Ссылка'];
+  const cols = ['ID','Проект','Заказчик','Контакт','Телефон','Email','Тема','Формат','Город','Участников','Язык','Тренер','Этап воронки','Статус','Приоритет','Вероятность','Дедлайн','Дата запроса','Дата КП','Сумма КП','Расходы тренер','НДС%','Маржа','Сумма договора','Статус оплаты','Источник','Менеджер','Программа','КП','Договор','Заявка','LMS','Следующее действие','Дата след.действия','Комментарий'];
   const rows = projects.map(p => [
     p.id, p.name, p.client, p.contact, p.phone, p.email, p.topic, p.format, p.city, p.participants,
-    p.language, p.trainer, p.status, p.stage, p.priority, p.deadline, p.requestDate, p.kpDate,
-    p.kpAmount, p.trainerCost, p.vat, p.margin, p.payStatus, p.source, p.manager,
+    p.language, p.trainer, p.funnelStage, p.status, p.priority, p.probability, p.deadline, p.requestDate, p.kpDate,
+    p.kpAmount, p.trainerCost, p.vat, p.margin, p.contractAmount, p.payStatus, p.source, p.manager,
     p.hasProg?'Да':'Нет', p.hasKP?'Да':'Нет', p.hasContract?'Да':'Нет', p.hasRequest?'Да':'Нет', p.hasLMS?'Да':'Нет',
-    p.nextAction, p.nextActionDate, p.comment, p.link
+    p.nextAction, p.nextActionDate, p.comment
   ]);
   const bom = '﻿';
   const csv = bom + [cols, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(';')).join('\n');
@@ -1128,20 +1850,31 @@ function exportExcel() {
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = `SBA_Projects_${today()}.csv`;
   a.click();
-  showToast('Файл экспортирован (CSV)', 'success');
+  showToast('Файл экспортирован', 'success');
 }
 
-// Close modals on overlay click
-document.getElementById('modalOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-document.getElementById('confirmOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeConfirm();
-});
+// ============================================================
+// OVERLAY CLOSE
+// ============================================================
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('clientModalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeClientModal(); });
+document.getElementById('trainerModalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeTrainerModal(); });
+document.getElementById('lmsModalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeLmsModal(); });
+document.getElementById('confirmOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeConfirm(); });
 
 // ============================================================
-// START
+// INIT
 // ============================================================
+function init() {
+  document.getElementById('headerDate').textContent = new Date().toLocaleDateString('ru-KZ', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  load();
+  initCalendar();
+  populateFilters();
+  applyFilters();
+  renderDashboard();
+  renderTemplates();
+}
+
 init();
 </script>
 </body>
