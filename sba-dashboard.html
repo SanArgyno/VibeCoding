@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBA — Дашборд проектного менеджера</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue-dark: #1a3a5c;
+    --blue-mid: #2563a8;
+    --blue-light: #3b82d4;
+    --blue-pale: #dbeafe;
+    --gray-dark: #374151;
+    --gray-mid: #6b7280;
+    --gray-light: #f3f4f6;
+    --gray-border: #e5e7eb;
+    --red: #dc2626;
+    --red-pale: #fee2e2;
+    --yellow: #d97706;
+    --yellow-pale: #fef3c7;
+    --green: #16a34a;
+    --green-pale: #dcfce7;
+    --orange: #ea580c;
+    --orange-pale: #ffedd5;
+    --white: #ffffff;
+    --shadow: 0 1px 4px rgba(0,0,0,0.10);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4fa; color: var(--gray-dark); font-size: 14px; }
+
+  /* HEADER */
+  .header { background: var(--blue-dark); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-md); }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+  .logo span { color: #93c5fd; }
+  .header-sub { font-size: 12px; color: #94a3b8; }
+  .header-right { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { padding: 8px 16px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; white-space: nowrap; }
+  .btn-primary { background: var(--blue-light); color: white; }
+  .btn-primary:hover { background: var(--blue-mid); }
+  .btn-success { background: #16a34a; color: white; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: #dc2626; color: white; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-gray { background: #64748b; color: white; }
+  .btn-gray:hover { background: #475569; }
+  .btn-outline { background: transparent; color: white; border: 1px solid #93c5fd; }
+  .btn-outline:hover { background: rgba(147,197,253,0.15); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-icon { padding: 6px 10px; }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1600px; margin: 0 auto; padding: 20px 16px; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi-card { background: white; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border-left: 4px solid var(--blue-mid); }
+  .kpi-card.red { border-left-color: var(--red); }
+  .kpi-card.green { border-left-color: var(--green); }
+  .kpi-card.yellow { border-left-color: var(--yellow); }
+  .kpi-card.orange { border-left-color: var(--orange); }
+  .kpi-label { font-size: 11px; color: var(--gray-mid); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: var(--blue-dark); line-height: 1; }
+  .kpi-value.red { color: var(--red); }
+  .kpi-value.yellow { color: var(--yellow); }
+  .kpi-value.green { color: var(--green); }
+  .kpi-sub { font-size: 11px; color: var(--gray-mid); margin-top: 4px; }
+
+  /* CHARTS ROW */
+  .charts-row { display: grid; grid-template-columns: 340px 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-card { background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+  .chart-title { font-size: 14px; font-weight: 700; color: var(--blue-dark); margin-bottom: 14px; }
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* ALERT BLOCKS */
+  .alert-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .alert-block { background: white; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+  .alert-block-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .alert-block-title .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .alert-block.urgent .alert-block-title { color: var(--red); }
+  .alert-block.urgent .dot { background: var(--red); }
+  .alert-block.waiting .alert-block-title { color: #7c3aed; }
+  .alert-block.waiting .dot { background: #7c3aed; }
+  .alert-block.kp .alert-block-title { color: var(--yellow); }
+  .alert-block.kp .dot { background: var(--yellow); }
+  .alert-block.program .alert-block-title { color: var(--orange); }
+  .alert-block.program .dot { background: var(--orange); }
+  .alert-block.contract .alert-block-title { color: var(--blue-mid); }
+  .alert-block.contract .dot { background: var(--blue-mid); }
+  .alert-block.lms .alert-block-title { color: #0891b2; }
+  .alert-block.lms .dot { background: #0891b2; }
+  .alert-block.done .alert-block-title { color: var(--green); }
+  .alert-block.done .dot { background: var(--green); }
+  .alert-item { font-size: 12px; padding: 5px 8px; border-radius: 4px; margin-bottom: 4px; cursor: pointer; transition: background .1s; }
+  .alert-item:hover { background: var(--gray-light); }
+  .alert-item strong { display: block; font-weight: 600; }
+  .alert-item span { color: var(--gray-mid); }
+  .alert-empty { font-size: 12px; color: var(--gray-mid); font-style: italic; }
+
+  /* FILTERS */
+  .filters-card { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .filters-title { font-size: 13px; font-weight: 700; color: var(--blue-dark); margin-bottom: 12px; }
+  .filters-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 130px; flex: 1; }
+  .filter-group label { font-size: 11px; color: var(--gray-mid); font-weight: 600; text-transform: uppercase; }
+  .filter-group input, .filter-group select { padding: 7px 10px; border: 1px solid var(--gray-border); border-radius: var(--radius-sm); font-size: 13px; color: var(--gray-dark); outline: none; background: white; }
+  .filter-group input:focus, .filter-group select:focus { border-color: var(--blue-light); box-shadow: 0 0 0 2px rgba(59,130,212,0.15); }
+  .filter-search { flex: 2; min-width: 200px; }
+
+  /* TABLE */
+  .table-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+  .table-header { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-border); flex-wrap: wrap; gap: 8px; }
+  .table-header-title { font-size: 15px; font-weight: 700; color: var(--blue-dark); }
+  .table-count { font-size: 12px; color: var(--gray-mid); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  th { background: var(--gray-light); color: var(--blue-dark); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--gray-border); white-space: nowrap; cursor: pointer; user-select: none; }
+  th:hover { background: var(--blue-pale); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--gray-border); font-size: 13px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8faff; }
+  tr.row-overdue td { background: var(--red-pale) !important; }
+  tr.row-soon td { background: var(--yellow-pale) !important; }
+  tr.row-done td { background: var(--green-pale) !important; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-red { background: var(--red-pale); color: var(--red); }
+  .badge-yellow { background: var(--yellow-pale); color: var(--yellow); }
+  .badge-green { background: var(--green-pale); color: var(--green); }
+  .badge-blue { background: var(--blue-pale); color: var(--blue-mid); }
+  .badge-gray { background: var(--gray-light); color: var(--gray-mid); }
+  .badge-purple { background: #ede9fe; color: #7c3aed; }
+  .badge-orange { background: var(--orange-pale); color: var(--orange); }
+  .badge-cyan { background: #cffafe; color: #0e7490; }
+  .table-actions { display: flex; gap: 4px; }
+  .icon-btn { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px; transition: background .1s; }
+  .icon-btn:hover { background: var(--gray-light); }
+  .check-icon { font-size: 13px; }
+  .check-yes { color: var(--green); }
+  .check-no { color: #d1d5db; }
+  .deadline-overdue { color: var(--red); font-weight: 700; }
+  .deadline-soon { color: var(--yellow); font-weight: 700; }
+  .deadline-ok { color: var(--gray-dark); }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px; }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: white; border-radius: var(--radius); width: 100%; max-width: 860px; box-shadow: var(--shadow-md); }
+  .modal-header { background: var(--blue-dark); color: white; padding: 16px 20px; border-radius: var(--radius) var(--radius) 0 0; display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 16px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
+  .modal-close:hover { color: #93c5fd; }
+  .modal-body { padding: 20px; max-height: 80vh; overflow-y: auto; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--gray-border); display: flex; gap: 8px; justify-content: flex-end; }
+  .form-section { margin-bottom: 20px; }
+  .form-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--blue-mid); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--blue-pale); }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 11px; font-weight: 600; color: var(--gray-mid); text-transform: uppercase; }
+  .form-group input, .form-group select, .form-group textarea { padding: 8px 10px; border: 1px solid var(--gray-border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; outline: none; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue-light); box-shadow: 0 0 0 2px rgba(59,130,212,0.15); }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+  .form-checkboxes { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; }
+  .form-cb { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+  .form-cb input { width: 15px; height: 15px; cursor: pointer; }
+
+  /* CONFIRM MODAL */
+  .confirm-modal { background: white; border-radius: var(--radius); width: 380px; box-shadow: var(--shadow-md); padding: 24px; text-align: center; }
+  .confirm-modal p { margin: 10px 0 20px; color: var(--gray-dark); }
+
+  /* TOAST */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--blue-dark); color: white; padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; box-shadow: var(--shadow-md); animation: slideIn .2s ease; max-width: 280px; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .charts-row { grid-template-columns: 1fr; }
+    .chart-wrap { height: 200px; }
+  }
+  @media (max-width: 600px) {
+    .header { padding: 10px 14px; }
+    .logo { font-size: 18px; }
+    .main { padding: 12px 8px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-value { font-size: 22px; }
+    .filters-row { flex-direction: column; }
+    .filter-group { min-width: 100%; }
+    table { min-width: 700px; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .sort-arrow { font-size: 10px; margin-left: 2px; }
+  .no-data { text-align: center; color: var(--gray-mid); padding: 32px; font-style: italic; }
+  .pagination { display: flex; align-items: center; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--gray-border); justify-content: flex-end; flex-wrap: wrap; }
+  .page-btn { padding: 5px 10px; border: 1px solid var(--gray-border); background: white; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .page-btn.active { background: var(--blue-mid); color: white; border-color: var(--blue-mid); }
+  .page-btn:hover:not(.active) { background: var(--gray-light); }
+  .page-info { font-size: 12px; color: var(--gray-mid); }
+
+  .margin-calc { background: var(--blue-pale); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--blue-dark); margin-top: 8px; }
+  .margin-calc strong { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">SBA <span>Dashboard</span></div>
+      <div class="header-sub">Samruk Business Academy — Проектный менеджер</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-primary" onclick="openModal()">+ Новый проект</button>
+    <button class="btn btn-success" onclick="exportExcel()">⬇ Excel</button>
+    <button class="btn btn-outline" onclick="confirmReset()">🗑 Сбросить</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- KPI -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- Charts -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Проекты по статусам</div>
+      <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Суммы КП по проектам (KZT)</div>
+      <div class="chart-wrap"><canvas id="chartKP"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Alert Blocks -->
+  <div class="alert-grid" id="alertGrid"></div>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filters-title">Фильтры и поиск</div>
+    <div class="filters-row">
+      <div class="filter-group filter-search">
+        <label>Поиск</label>
+        <input type="text" id="fSearch" placeholder="Название, заказчик, тренер..." oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>Статус</label>
+        <select id="fStatus" onchange="applyFilters()">
+          <option value="">Все</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Заказчик</label>
+        <select id="fClient" onchange="applyFilters()">
+          <option value="">Все</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Тренер</label>
+        <select id="fTrainer" onchange="applyFilters()">
+          <option value="">Все</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Город</label>
+        <select id="fCity" onchange="applyFilters()">
+          <option value="">Все</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Ответственный</label>
+        <select id="fManager" onchange="applyFilters()">
+          <option value="">Все</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Дедлайн до</label>
+        <input type="date" id="fDeadline" onchange="applyFilters()">
+      </div>
+      <div style="align-self:flex-end">
+        <button class="btn btn-gray btn-sm" onclick="clearFilters()">Сбросить фильтры</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div>
+        <div class="table-header-title">Реестр проектов</div>
+        <div class="table-count" id="tableCount"></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="projectsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('name')">Проект <span class="sort-arrow" id="sort-name"></span></th>
+            <th onclick="sortTable('client')">Заказчик <span class="sort-arrow" id="sort-client"></span></th>
+            <th onclick="sortTable('topic')">Тема <span class="sort-arrow" id="sort-topic"></span></th>
+            <th onclick="sortTable('trainer')">Тренер <span class="sort-arrow" id="sort-trainer"></span></th>
+            <th onclick="sortTable('status')">Статус <span class="sort-arrow" id="sort-status"></span></th>
+            <th onclick="sortTable('deadline')">Дедлайн <span class="sort-arrow" id="sort-deadline"></span></th>
+            <th onclick="sortTable('kpAmount')">Сумма КП <span class="sort-arrow" id="sort-kpAmount"></span></th>
+            <th>Документы</th>
+            <th onclick="sortTable('nextActionDate')">След. действие <span class="sort-arrow" id="sort-nextActionDate"></span></th>
+            <th>Менеджер</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Новый проект</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section">
+        <div class="form-section-title">Основная информация</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Название проекта *</label>
+            <input type="text" id="f_name" placeholder="Тренинг по управлению проектами...">
+          </div>
+          <div class="form-group">
+            <label>Заказчик *</label>
+            <input type="text" id="f_client" placeholder="АО Казмунайгаз">
+          </div>
+          <div class="form-group">
+            <label>Контактное лицо</label>
+            <input type="text" id="f_contact" placeholder="Асем Нурланова">
+          </div>
+          <div class="form-group">
+            <label>Телефон / WhatsApp</label>
+            <input type="text" id="f_phone" placeholder="+7 777 123 45 67">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="f_email" placeholder="contact@company.kz">
+          </div>
+          <div class="form-group">
+            <label>Тема обучения</label>
+            <input type="text" id="f_topic" placeholder="Лидерство, PMBoK...">
+          </div>
+          <div class="form-group">
+            <label>Формат обучения</label>
+            <select id="f_format">
+              <option value="">Не выбрано</option>
+              <option>Очный тренинг</option>
+              <option>Онлайн-вебинар</option>
+              <option>Гибридный</option>
+              <option>Коучинг</option>
+              <option>Оценка персонала</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Город</label>
+            <input type="text" id="f_city" placeholder="Алматы">
+          </div>
+          <div class="form-group">
+            <label>Кол-во участников</label>
+            <input type="number" id="f_participants" placeholder="20">
+          </div>
+          <div class="form-group">
+            <label>Язык обучения</label>
+            <select id="f_language">
+              <option value="">Не выбрано</option>
+              <option>Казахский</option>
+              <option>Русский</option>
+              <option>Смешанный (KZ/RU)</option>
+              <option>Английский</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Тренер / Провайдер</label>
+            <input type="text" id="f_trainer" placeholder="Айгерим Сатпаева">
+          </div>
+          <div class="form-group">
+            <label>Источник запроса</label>
+            <select id="f_source">
+              <option value="">Не выбрано</option>
+              <option>Входящий звонок</option>
+              <option>Email</option>
+              <option>WhatsApp</option>
+              <option>Bitrix</option>
+              <option>Рекомендация</option>
+              <option>Повторный клиент</option>
+              <option>Сайт</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Статус и этапы</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Статус проекта *</label>
+            <select id="f_status">
+              <option value="Новая заявка">Новая заявка</option>
+              <option value="КП подготовлен">КП подготовлен</option>
+              <option value="КП отправлен">КП отправлен</option>
+              <option value="Жду ответ">Жду ответ</option>
+              <option value="Согласование">Согласование</option>
+              <option value="Договор оформляется">Договор оформляется</option>
+              <option value="Оплачен">Оплачен</option>
+              <option value="В работе">В работе</option>
+              <option value="Завершён">Завершён</option>
+              <option value="Отказ">Отказ</option>
+              <option value="Заморожен">Заморожен</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Текущий этап</label>
+            <input type="text" id="f_stage" placeholder="Согласование программы">
+          </div>
+          <div class="form-group">
+            <label>Приоритет</label>
+            <select id="f_priority">
+              <option value="Средний">Средний</option>
+              <option value="Высокий">Высокий</option>
+              <option value="Низкий">Низкий</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ответственный менеджер</label>
+            <input type="text" id="f_manager" placeholder="Динара Жаксыбекова">
+          </div>
+          <div class="form-group">
+            <label>Дата запроса</label>
+            <input type="date" id="f_requestDate">
+          </div>
+          <div class="form-group">
+            <label>Дедлайн (дата обучения)</label>
+            <input type="date" id="f_deadline">
+          </div>
+          <div class="form-group">
+            <label>Следующее действие</label>
+            <input type="text" id="f_nextAction" placeholder="Позвонить, напомнить про КП...">
+          </div>
+          <div class="form-group">
+            <label>Дата следующего действия</label>
+            <input type="date" id="f_nextActionDate">
+          </div>
+          <div class="form-group full">
+            <label>Комментарий</label>
+            <textarea id="f_comment" placeholder="Доп. информация по проекту..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Ссылка (Bitrix / Documentolog)</label>
+            <input type="text" id="f_link" placeholder="https://...">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Финансы</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Дата отправки КП</label>
+            <input type="date" id="f_kpDate">
+          </div>
+          <div class="form-group">
+            <label>Сумма КП (KZT, без НДС)</label>
+            <input type="number" id="f_kpAmount" placeholder="1500000" oninput="calcMargin()">
+          </div>
+          <div class="form-group">
+            <label>Расходы на тренера (KZT)</label>
+            <input type="number" id="f_trainerCost" placeholder="800000" oninput="calcMargin()">
+          </div>
+          <div class="form-group">
+            <label>НДС включён</label>
+            <select id="f_vat" onchange="calcMargin()">
+              <option value="0">Без НДС</option>
+              <option value="12">12%</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Статус оплаты</label>
+            <select id="f_payStatus">
+              <option value="">Не оплачен</option>
+              <option>Частично оплачен</option>
+              <option>Полностью оплачен</option>
+            </select>
+          </div>
+        </div>
+        <div class="margin-calc" id="marginCalc"></div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Наличие документов</div>
+        <div class="form-checkboxes">
+          <label class="form-cb"><input type="checkbox" id="f_hasProg"> Программа</label>
+          <label class="form-cb"><input type="checkbox" id="f_hasKP"> КП</label>
+          <label class="form-cb"><input type="checkbox" id="f_hasContract"> Договор</label>
+          <label class="form-cb"><input type="checkbox" id="f_hasRequest"> Заявка</label>
+          <label class="form-cb"><input type="checkbox" id="f_hasLMS"> LMS-доступ выдан</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveProject()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay hidden" id="confirmOverlay">
+  <div class="confirm-modal">
+    <div style="font-size:36px">⚠️</div>
+    <p id="confirmText">Вы уверены?</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-gray" onclick="closeConfirm()">Отмена</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// DATA & CONSTANTS
+// ============================================================
+const STATUSES = ['Новая заявка','КП подготовлен','КП отправлен','Жду ответ','Согласование','Договор оформляется','Оплачен','В работе','Завершён','Отказ','Заморожен'];
+
+const STATUS_COLORS = {
+  'Новая заявка': 'badge-blue',
+  'КП подготовлен': 'badge-yellow',
+  'КП отправлен': 'badge-orange',
+  'Жду ответ': 'badge-purple',
+  'Согласование': 'badge-cyan',
+  'Договор оформляется': 'badge-blue',
+  'Оплачен': 'badge-green',
+  'В работе': 'badge-blue',
+  'Завершён': 'badge-green',
+  'Отказ': 'badge-red',
+  'Заморожен': 'badge-gray'
+};
+
+const PRIORITY_COLORS = { 'Высокий': 'badge-red', 'Средний': 'badge-yellow', 'Низкий': 'badge-gray' };
+
+const DEFAULT_DATA = [
+  {
+    id: 1, name: 'Тренинг «Управление проектами (PMBoK)»', client: 'АО «КазМунайГаз»',
+    contact: 'Асем Нурланова', phone: '+7 701 234 56 78', email: 'anurlanova@kmg.kz',
+    topic: 'Управление проектами', format: 'Очный тренинг', city: 'Астана', participants: 25,
+    language: 'Русский', trainer: 'Берик Сейтжанов', status: 'В работе', stage: 'Подготовка материалов',
+    deadline: '2026-06-20', requestDate: '2026-05-10', kpDate: '2026-05-15',
+    kpAmount: 3500000, trainerCost: 1800000, vat: 12, margin: null,
+    source: 'Повторный клиент', manager: 'Динара Жаксыбекова', priority: 'Высокий',
+    comment: 'Провести в конференц-зале заказчика. Нужна флипчарт-бумага.',
+    nextAction: 'Подтвердить расписание с тренером', nextActionDate: '2026-06-05',
+    link: 'https://bitrix.sba.kz/12345',
+    hasProg: true, hasKP: true, hasContract: true, hasRequest: true, hasLMS: false,
+    payStatus: 'Частично оплачен'
+  },
+  {
+    id: 2, name: 'Воркшоп «Agile & Scrum для команд»', client: 'ТОО «Jusan Bank»',
+    contact: 'Даурен Касымов', phone: '+7 777 345 67 89', email: 'dkasymov@jusan.kz',
+    topic: 'Agile / Scrum', format: 'Гибридный', city: 'Алматы', participants: 30,
+    language: 'Русский', trainer: 'Айгерим Сатпаева', status: 'Жду ответ', stage: 'Ожидание согласования КП',
+    deadline: '2026-07-10', requestDate: '2026-05-28', kpDate: '2026-06-01',
+    kpAmount: 2100000, trainerCost: 1000000, vat: 0, margin: null,
+    source: 'Email', manager: 'Нурлан Ахметов', priority: 'Высокий',
+    comment: 'Просили прислать примеры кейсов из банковского сектора.',
+    nextAction: 'Позвонить Даурену — уточнить решение по КП', nextActionDate: '2026-06-04',
+    link: '',
+    hasProg: true, hasKP: true, hasContract: false, hasRequest: true, hasLMS: false,
+    payStatus: ''
+  },
+  {
+    id: 3, name: 'Онлайн-курс «Эффективная коммуникация»', client: 'АО «Air Astana»',
+    contact: 'Гульнара Бейсенова', phone: '+7 702 456 78 90', email: 'gbeisenova@airastana.com',
+    topic: 'Soft Skills / Коммуникации', format: 'Онлайн-вебинар', city: 'Алматы', participants: 50,
+    language: 'Казахский', trainer: 'Зарина Мухамедова', status: 'КП подготовлен', stage: 'Доработка КП',
+    deadline: '2026-06-25', requestDate: '2026-06-01', kpDate: '',
+    kpAmount: 1800000, trainerCost: 900000, vat: 12, margin: null,
+    source: 'Входящий звонок', manager: 'Динара Жаксыбекова', priority: 'Средний',
+    comment: 'Нужна адаптация на казахский язык всех материалов.',
+    nextAction: 'Отправить финальный КП', nextActionDate: '2026-06-06',
+    link: 'https://bitrix.sba.kz/12348',
+    hasProg: true, hasKP: false, hasContract: false, hasRequest: true, hasLMS: false,
+    payStatus: ''
+  },
+  {
+    id: 4, name: 'Коучинг топ-менеджеров (6 сессий)', client: 'ТОО «Qazaq Stroy»',
+    contact: 'Марат Дуйсенов', phone: '+7 705 567 89 01', email: 'mduysenov@qazstroy.kz',
+    topic: 'Коучинг / Лидерство', format: 'Коучинг', city: 'Астана', participants: 5,
+    language: 'Смешанный (KZ/RU)', trainer: 'Берик Сейтжанов', status: 'Завершён', stage: 'Завершено',
+    deadline: '2026-05-30', requestDate: '2026-03-15', kpDate: '2026-03-20',
+    kpAmount: 4200000, trainerCost: 2000000, vat: 12, margin: null,
+    source: 'Рекомендация', manager: 'Нурлан Ахметов', priority: 'Высокий',
+    comment: 'Провели все 6 сессий успешно. Клиент доволен.',
+    nextAction: 'Запросить отзыв и NPS', nextActionDate: '2026-06-10',
+    link: 'https://bitrix.sba.kz/11200',
+    hasProg: true, hasKP: true, hasContract: true, hasRequest: true, hasLMS: true,
+    payStatus: 'Полностью оплачен'
+  },
+  {
+    id: 5, name: 'Тренинг «Продажи B2B»', client: 'ТОО «Technodom»',
+    contact: 'Айдана Сейткали', phone: '+7 707 678 90 12', email: 'aseitkali@technodom.kz',
+    topic: 'Продажи B2B', format: 'Очный тренинг', city: 'Алматы', participants: 15,
+    language: 'Русский', trainer: 'Айгерим Сатпаева', status: 'Новая заявка', stage: 'Первичный контакт',
+    deadline: '2026-07-15', requestDate: '2026-06-03', kpDate: '',
+    kpAmount: 0, trainerCost: 0, vat: 0, margin: null,
+    source: 'WhatsApp', manager: 'Динара Жаксыбекова', priority: 'Средний',
+    comment: 'Пришёл холодный запрос. Нужно уточнить детали и подготовить КП.',
+    nextAction: 'Провести звонок-диагностику и подготовить КП', nextActionDate: '2026-06-05',
+    link: '',
+    hasProg: false, hasKP: false, hasContract: false, hasRequest: true, hasLMS: false,
+    payStatus: ''
+  }
+];
+
+let projects = [];
+let editingId = null;
+let sortField = 'deadline';
+let sortDir = 1;
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let filteredProjects = [];
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  const stored = localStorage.getItem('sba_projects');
+  if (stored) {
+    projects = JSON.parse(stored);
+  } else {
+    projects = DEFAULT_DATA.map(p => ({ ...p, margin: calcProjectMargin(p) }));
+    save();
+  }
+  render();
+}
+
+function save() {
+  localStorage.setItem('sba_projects', JSON.stringify(projects));
+}
+
+function calcProjectMargin(p) {
+  if (!p.kpAmount || p.kpAmount <= 0) return null;
+  const vat = p.vat ? p.kpAmount * (p.vat / (100 + p.vat)) : 0;
+  const revenue = p.kpAmount - vat;
+  const cost = p.trainerCost || 0;
+  return revenue - cost;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  renderKPI();
+  renderCharts();
+  renderAlertBlocks();
+  populateFilters();
+  applyFilters();
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+function todayDate() { return new Date(); }
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return dateStr < today();
+}
+
+function isSoon(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = todayDate();
+  const diff = (d - now) / (1000 * 60 * 60 * 24);
+  return diff >= 0 && diff <= 2;
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+function fmtMoney(v) {
+  if (!v || v === 0) return '—';
+  return Number(v).toLocaleString('ru-KZ') + ' ₸';
+}
+
+// KPI
+function renderKPI() {
+  const active = projects.filter(p => !['Завершён','Отказ'].includes(p.status)).length;
+  const done = projects.filter(p => p.status === 'Завершён').length;
+  const overdueActions = projects.filter(p => p.nextActionDate && isOverdue(p.nextActionDate) && p.status !== 'Завершён' && p.status !== 'Отказ').length;
+  const todayActions = projects.filter(p => p.nextActionDate === today() && !['Завершён','Отказ'].includes(p.status)).length;
+  const totalKP = projects.filter(p => p.kpAmount > 0).reduce((s, p) => s + (p.kpAmount || 0), 0);
+  const avgKP = projects.filter(p => p.kpAmount > 0).length > 0 ? totalKP / projects.filter(p => p.kpAmount > 0).length : 0;
+  const waiting = projects.filter(p => p.status === 'Жду ответ').length;
+  const noKP = projects.filter(p => !p.hasKP && !['Завершён','Отказ'].includes(p.status)).length;
+
+  const kpis = [
+    { label: 'Активных проектов', value: active, sub: `Всего: ${projects.length}`, cls: '' },
+    { label: 'Завершено', value: done, sub: 'проектов', cls: 'green', valcls: 'green' },
+    { label: 'Просрочено задач', value: overdueActions, sub: 'требуют внимания', cls: 'red', valcls: 'red' },
+    { label: 'Задач сегодня', value: todayActions, sub: 'запланировано', cls: 'yellow', valcls: 'yellow' },
+    { label: 'Жду ответ', value: waiting, sub: 'проектов', cls: '', valcls: '' },
+    { label: 'Без КП', value: noKP, sub: 'нужно подготовить', cls: 'orange', valcls: '' },
+    { label: 'Сумма всех КП', value: fmtMoney(totalKP), sub: 'по активным и завершённым', cls: '', valcls: '', isText: true },
+    { label: 'Средний КП', value: fmtMoney(Math.round(avgKP)), sub: 'на проект', cls: '', valcls: '', isText: true },
+  ];
+
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value ${k.valcls || ''}" style="${k.isText ? 'font-size:16px' : ''}">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// Charts
+let chartStatus = null, chartKP = null;
+
+function renderCharts() {
+  // Status chart
+  const statusCounts = {};
+  STATUSES.forEach(s => { statusCounts[s] = 0; });
+  projects.forEach(p => { statusCounts[p.status] = (statusCounts[p.status] || 0) + 1; });
+  const statusLabels = Object.keys(statusCounts).filter(s => statusCounts[s] > 0);
+  const statusData = statusLabels.map(s => statusCounts[s]);
+  const colors = ['#2563a8','#d97706','#ea580c','#7c3aed','#0891b2','#3b82d4','#16a34a','#2563a8','#4ade80','#dc2626','#94a3b8'];
+
+  if (chartStatus) chartStatus.destroy();
+  chartStatus = new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: { labels: statusLabels, datasets: [{ data: statusData, backgroundColor: colors.slice(0, statusLabels.length), borderWidth: 2, borderColor: '#fff' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 8 } } } }
+  });
+
+  // KP bar chart
+  const kpProjects = projects.filter(p => p.kpAmount > 0).slice(0, 8);
+  if (chartKP) chartKP.destroy();
+  chartKP = new Chart(document.getElementById('chartKP'), {
+    type: 'bar',
+    data: {
+      labels: kpProjects.map(p => p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name),
+      datasets: [{
+        label: 'Сумма КП (₸)',
+        data: kpProjects.map(p => p.kpAmount),
+        backgroundColor: '#2563a8cc',
+        borderColor: '#1a3a5c',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: v => (v/1000000).toFixed(1) + 'M', font: { size: 11 } }, grid: { color: '#f0f4fa' } },
+        x: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// Alert Blocks
+function renderAlertBlocks() {
+  const todayStr = today();
+  const urgent = projects.filter(p => p.nextActionDate && isOverdue(p.nextActionDate) && !['Завершён','Отказ'].includes(p.status));
+  const waiting = projects.filter(p => p.status === 'Жду ответ');
+  const needKP = projects.filter(p => !p.hasKP && !['Завершён','Отказ'].includes(p.status));
+  const needProg = projects.filter(p => !p.hasProg && !['Завершён','Отказ'].includes(p.status));
+  const needContract = projects.filter(p => !p.hasContract && ['Оплачен','В работе','Согласование'].includes(p.status));
+  const needLMS = projects.filter(p => !p.hasLMS && p.status === 'В работе');
+  const done = projects.filter(p => p.status === 'Завершён');
+
+  function items(list) {
+    if (!list.length) return '<div class="alert-empty">Нет записей</div>';
+    return list.slice(0, 4).map(p => `
+      <div class="alert-item" onclick="openModal(${p.id})">
+        <strong>${p.name}</strong>
+        <span>${p.client}${p.nextActionDate ? ' · ' + fmtDate(p.nextActionDate) : ''}</span>
+      </div>
+    `).join('') + (list.length > 4 ? `<div class="alert-empty">+${list.length - 4} ещё</div>` : '');
+  }
+
+  document.getElementById('alertGrid').innerHTML = `
+    <div class="alert-block urgent">
+      <div class="alert-block-title"><span class="dot"></span>🔴 Срочно (${urgent.length})</div>
+      ${items(urgent)}
+    </div>
+    <div class="alert-block waiting">
+      <div class="alert-block-title"><span class="dot"></span>⏳ Жду ответ (${waiting.length})</div>
+      ${items(waiting)}
+    </div>
+    <div class="alert-block kp">
+      <div class="alert-block-title"><span class="dot"></span>📄 Нужен КП (${needKP.length})</div>
+      ${items(needKP)}
+    </div>
+    <div class="alert-block program">
+      <div class="alert-block-title"><span class="dot"></span>📋 Нужна программа (${needProg.length})</div>
+      ${items(needProg)}
+    </div>
+    <div class="alert-block contract">
+      <div class="alert-block-title"><span class="dot"></span>📝 Договор нужен (${needContract.length})</div>
+      ${items(needContract)}
+    </div>
+    <div class="alert-block lms">
+      <div class="alert-block-title"><span class="dot"></span>🖥 LMS-доступы (${needLMS.length})</div>
+      ${items(needLMS)}
+    </div>
+    <div class="alert-block done">
+      <div class="alert-block-title"><span class="dot"></span>✅ Завершено (${done.length})</div>
+      ${items(done)}
+    </div>
+  `;
+}
+
+// Populate filter dropdowns
+function populateFilters() {
+  function fillSelect(id, values) {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = '<option value="">Все</option>' + [...new Set(values.filter(Boolean))].sort().map(v => `<option value="${v}">${v}</option>`).join('');
+    el.value = cur;
+  }
+  fillSelect('fStatus', projects.map(p => p.status));
+  fillSelect('fClient', projects.map(p => p.client));
+  fillSelect('fTrainer', projects.map(p => p.trainer));
+  fillSelect('fCity', projects.map(p => p.city));
+  fillSelect('fManager', projects.map(p => p.manager));
+}
+
+// ============================================================
+// FILTERS & TABLE
+// ============================================================
+function applyFilters() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const status = document.getElementById('fStatus').value;
+  const client = document.getElementById('fClient').value;
+  const trainer = document.getElementById('fTrainer').value;
+  const city = document.getElementById('fCity').value;
+  const manager = document.getElementById('fManager').value;
+  const deadline = document.getElementById('fDeadline').value;
+
+  filteredProjects = projects.filter(p => {
+    if (status && p.status !== status) return false;
+    if (client && p.client !== client) return false;
+    if (trainer && p.trainer !== trainer) return false;
+    if (city && p.city !== city) return false;
+    if (manager && p.manager !== manager) return false;
+    if (deadline && p.deadline && p.deadline > deadline) return false;
+    if (search) {
+      const hay = [p.name, p.client, p.trainer, p.topic, p.contact, p.manager, p.city, p.status, p.comment, p.nextAction].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  filteredProjects.sort((a, b) => {
+    let av = a[sortField] || '', bv = b[sortField] || '';
+    if (typeof av === 'number') return (av - bv) * sortDir;
+    return av.localeCompare(bv, 'ru') * sortDir;
+  });
+
+  currentPage = 1;
+  renderTable();
+}
+
+function clearFilters() {
+  ['fSearch','fDeadline'].forEach(id => document.getElementById(id).value = '');
+  ['fStatus','fClient','fTrainer','fCity','fManager'].forEach(id => document.getElementById(id).value = '');
+  applyFilters();
+}
+
+function sortTable(field) {
+  if (sortField === field) sortDir *= -1;
+  else { sortField = field; sortDir = 1; }
+  document.querySelectorAll('.sort-arrow').forEach(el => el.textContent = '');
+  const arrow = document.getElementById(`sort-${field}`);
+  if (arrow) arrow.textContent = sortDir === 1 ? ' ▲' : ' ▼';
+  applyFilters();
+}
+
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = filteredProjects.slice(start, start + PAGE_SIZE);
+  const todayStr = today();
+
+  document.getElementById('tableCount').textContent = `Показано ${page.length} из ${filteredProjects.length} проектов`;
+
+  const tbody = document.getElementById('tableBody');
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="11" class="no-data">Нет проектов по выбранным фильтрам</td></tr>';
+    renderPagination();
+    return;
+  }
+
+  tbody.innerHTML = page.map(p => {
+    let rowCls = '';
+    if (p.status === 'Завершён') rowCls = 'row-done';
+    else if (p.deadline && isOverdue(p.deadline)) rowCls = 'row-overdue';
+    else if (p.deadline && isSoon(p.deadline)) rowCls = 'row-soon';
+
+    const dlCls = !p.deadline ? '' : isOverdue(p.deadline) ? 'deadline-overdue' : isSoon(p.deadline) ? 'deadline-soon' : 'deadline-ok';
+    const naCls = !p.nextActionDate ? '' : isOverdue(p.nextActionDate) ? 'deadline-overdue' : p.nextActionDate === todayStr ? 'deadline-soon' : '';
+
+    const docs = [
+      p.hasProg ? '<span title="Программа" class="check-icon check-yes">📋</span>' : '<span title="Нет программы" class="check-icon check-no">📋</span>',
+      p.hasKP ? '<span title="КП" class="check-icon check-yes">📄</span>' : '<span title="Нет КП" class="check-icon check-no">📄</span>',
+      p.hasContract ? '<span title="Договор" class="check-icon check-yes">📝</span>' : '<span title="Нет договора" class="check-icon check-no">📝</span>',
+      p.hasLMS ? '<span title="LMS" class="check-icon check-yes">🖥</span>' : '<span title="LMS не выдан" class="check-icon check-no">🖥</span>',
+    ].join(' ');
+
+    return `<tr class="${rowCls}">
+      <td><strong>${p.name}</strong><br><small style="color:#6b7280">${p.topic || ''}</small></td>
+      <td>${p.client}<br><small style="color:#6b7280">${p.contact || ''}</small></td>
+      <td><small>${p.topic || '—'}</small></td>
+      <td>${p.trainer || '—'}</td>
+      <td><span class="badge ${STATUS_COLORS[p.status] || 'badge-gray'}">${p.status}</span><br><span class="badge ${PRIORITY_COLORS[p.priority] || 'badge-gray'}" style="margin-top:3px">${p.priority}</span></td>
+      <td class="${dlCls}">${fmtDate(p.deadline)}</td>
+      <td>${p.kpAmount ? fmtMoney(p.kpAmount) : '—'}<br><small style="color:#16a34a">${p.margin != null ? 'Маржа: ' + fmtMoney(p.margin) : ''}</small></td>
+      <td>${docs}</td>
+      <td class="${naCls}">${p.nextAction ? `<strong>${p.nextAction}</strong><br><small>${fmtDate(p.nextActionDate)}</small>` : '—'}</td>
+      <td>${p.manager || '—'}</td>
+      <td>
+        <div class="table-actions">
+          <button class="icon-btn" title="Редактировать" onclick="openModal(${p.id})">✏️</button>
+          <button class="icon-btn" title="Удалить" onclick="deleteProject(${p.id})">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = filteredProjects.length;
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const el = document.getElementById('pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = `<span class="page-info">Стр. ${currentPage} из ${pages}</span>`;
+  for (let i = 1; i <= pages; i++) {
+    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  el.innerHTML = html;
+}
+
+function goPage(n) { currentPage = n; renderTable(); }
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(id) {
+  editingId = id || null;
+  document.getElementById('modalTitle').textContent = id ? 'Редактировать проект' : 'Новый проект';
+  clearForm();
+  if (id) {
+    const p = projects.find(x => x.id === id);
+    if (p) fillForm(p);
+  }
+  calcMargin();
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+  editingId = null;
+}
+
+function clearForm() {
+  ['f_name','f_client','f_contact','f_phone','f_email','f_topic','f_city','f_trainer','f_stage','f_manager','f_comment','f_nextAction','f_link'].forEach(id => document.getElementById(id).value = '');
+  ['f_participants','f_kpAmount','f_trainerCost'].forEach(id => document.getElementById(id).value = '');
+  ['f_requestDate','f_deadline','f_kpDate','f_nextActionDate'].forEach(id => document.getElementById(id).value = '');
+  ['f_format','f_language','f_source','f_payStatus'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_status').value = 'Новая заявка';
+  document.getElementById('f_priority').value = 'Средний';
+  document.getElementById('f_vat').value = '0';
+  ['f_hasProg','f_hasKP','f_hasContract','f_hasRequest','f_hasLMS'].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById('marginCalc').innerHTML = '';
+}
+
+function fillForm(p) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  const setCb = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+  set('f_name', p.name); set('f_client', p.client); set('f_contact', p.contact);
+  set('f_phone', p.phone); set('f_email', p.email); set('f_topic', p.topic);
+  set('f_format', p.format); set('f_city', p.city); set('f_participants', p.participants);
+  set('f_language', p.language); set('f_trainer', p.trainer); set('f_status', p.status);
+  set('f_stage', p.stage); set('f_priority', p.priority); set('f_manager', p.manager);
+  set('f_requestDate', p.requestDate); set('f_deadline', p.deadline);
+  set('f_nextAction', p.nextAction); set('f_nextActionDate', p.nextActionDate);
+  set('f_comment', p.comment); set('f_link', p.link); set('f_source', p.source);
+  set('f_kpDate', p.kpDate); set('f_kpAmount', p.kpAmount || ''); set('f_trainerCost', p.trainerCost || '');
+  set('f_vat', p.vat || '0'); set('f_payStatus', p.payStatus || '');
+  setCb('f_hasProg', p.hasProg); setCb('f_hasKP', p.hasKP); setCb('f_hasContract', p.hasContract);
+  setCb('f_hasRequest', p.hasRequest); setCb('f_hasLMS', p.hasLMS);
+}
+
+function getFormData() {
+  const g = id => document.getElementById(id)?.value || '';
+  const gc = id => document.getElementById(id)?.checked || false;
+  const gn = id => parseFloat(document.getElementById(id)?.value) || 0;
+  return {
+    name: g('f_name'), client: g('f_client'), contact: g('f_contact'), phone: g('f_phone'),
+    email: g('f_email'), topic: g('f_topic'), format: g('f_format'), city: g('f_city'),
+    participants: gn('f_participants'), language: g('f_language'), trainer: g('f_trainer'),
+    status: g('f_status'), stage: g('f_stage'), priority: g('f_priority'), manager: g('f_manager'),
+    requestDate: g('f_requestDate'), deadline: g('f_deadline'), kpDate: g('f_kpDate'),
+    kpAmount: gn('f_kpAmount'), trainerCost: gn('f_trainerCost'), vat: parseInt(g('f_vat')) || 0,
+    payStatus: g('f_payStatus'), source: g('f_source'), comment: g('f_comment'), link: g('f_link'),
+    nextAction: g('f_nextAction'), nextActionDate: g('f_nextActionDate'),
+    hasProg: gc('f_hasProg'), hasKP: gc('f_hasKP'), hasContract: gc('f_hasContract'),
+    hasRequest: gc('f_hasRequest'), hasLMS: gc('f_hasLMS')
+  };
+}
+
+function saveProject() {
+  const data = getFormData();
+  if (!data.name.trim()) { showToast('Введите название проекта', 'error'); return; }
+  if (!data.client.trim()) { showToast('Введите заказчика', 'error'); return; }
+  data.margin = calcProjectMargin(data);
+  if (editingId) {
+    const idx = projects.findIndex(p => p.id === editingId);
+    if (idx >= 0) projects[idx] = { ...projects[idx], ...data };
+    showToast('Проект обновлён', 'success');
+  } else {
+    data.id = Date.now();
+    projects.push(data);
+    showToast('Проект добавлен', 'success');
+  }
+  save();
+  closeModal();
+  render();
+}
+
+function deleteProject(id) {
+  const p = projects.find(x => x.id === id);
+  confirmAction(`Удалить проект «${p?.name}»?`, () => {
+    projects = projects.filter(x => x.id !== id);
+    save();
+    render();
+    showToast('Проект удалён');
+  });
+}
+
+// Margin calc in modal
+function calcMargin() {
+  const kp = parseFloat(document.getElementById('f_kpAmount')?.value) || 0;
+  const cost = parseFloat(document.getElementById('f_trainerCost')?.value) || 0;
+  const vat = parseInt(document.getElementById('f_vat')?.value) || 0;
+  const el = document.getElementById('marginCalc');
+  if (!kp) { el.innerHTML = ''; return; }
+  const vatAmt = kp * (vat / (100 + vat));
+  const revenue = kp - vatAmt;
+  const margin = revenue - cost;
+  const pct = revenue > 0 ? ((margin / revenue) * 100).toFixed(1) : 0;
+  el.innerHTML = `Выручка (без НДС): <strong>${fmtMoney(Math.round(revenue))}</strong> &nbsp;|&nbsp; НДС: <strong>${fmtMoney(Math.round(vatAmt))}</strong> &nbsp;|&nbsp; Маржа: <strong style="color:${margin >= 0 ? '#16a34a' : '#dc2626'}">${fmtMoney(Math.round(margin))} (${pct}%)</strong>`;
+}
+
+// ============================================================
+// CONFIRM / RESET
+// ============================================================
+function confirmReset() {
+  confirmAction('Сбросить все данные и загрузить тестовые примеры?', () => {
+    projects = DEFAULT_DATA.map(p => ({ ...p, margin: calcProjectMargin(p) }));
+    save();
+    render();
+    showToast('Данные сброшены');
+  });
+}
+
+function confirmAction(text, cb) {
+  document.getElementById('confirmText').textContent = text;
+  document.getElementById('confirmOkBtn').onclick = () => { cb(); closeConfirm(); };
+  document.getElementById('confirmOverlay').classList.remove('hidden');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.add('hidden');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ============================================================
+// EXPORT EXCEL (CSV)
+// ============================================================
+function exportExcel() {
+  const cols = ['ID','Проект','Заказчик','Контакт','Телефон','Email','Тема','Формат','Город','Участников','Язык','Тренер','Статус','Этап','Приоритет','Дедлайн','Дата запроса','Дата КП','Сумма КП','Расходы тренер','НДС%','Маржа','Статус оплаты','Источник','Менеджер','Программа','КП','Договор','Заявка','LMS','Следующее действие','Дата след.действия','Комментарий','Ссылка'];
+  const rows = projects.map(p => [
+    p.id, p.name, p.client, p.contact, p.phone, p.email, p.topic, p.format, p.city, p.participants,
+    p.language, p.trainer, p.status, p.stage, p.priority, p.deadline, p.requestDate, p.kpDate,
+    p.kpAmount, p.trainerCost, p.vat, p.margin, p.payStatus, p.source, p.manager,
+    p.hasProg?'Да':'Нет', p.hasKP?'Да':'Нет', p.hasContract?'Да':'Нет', p.hasRequest?'Да':'Нет', p.hasLMS?'Да':'Нет',
+    p.nextAction, p.nextActionDate, p.comment, p.link
+  ]);
+  const bom = '﻿';
+  const csv = bom + [cols, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `SBA_Projects_${today()}.csv`;
+  a.click();
+  showToast('Файл экспортирован (CSV)', 'success');
+}
+
+// Close modals on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeConfirm();
+});
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
